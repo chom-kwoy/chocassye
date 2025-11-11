@@ -229,6 +229,7 @@ export async function insert_documents(insert_fn, batch_size, slice) {
   const parser = new dom.window.DOMParser();
 
   const xmlFiles = await glob("chocassye-corpus/data/*/*.xml");
+  xmlFiles.sort();
   console.log("Total", xmlFiles.length, "files");
   let promises = [];
   for (let [i, file] of xmlFiles.entries()) {

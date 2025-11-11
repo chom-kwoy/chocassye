@@ -84,15 +84,15 @@ async function populate_db(database_name, doc_cnt) {
       ]);
     })
     .then(async () => {
-      const BATCH_SIZE = process.env.BATCH ? parseInt(process.env.BATCH) : 16;
+      const BATCH_SIZE = process.env.BATCH ? parseInt(process.env.BATCH) : 256;
       console.log("Batch size:", BATCH_SIZE);
 
       function insert(index, book_details, sentences) {
         return insert_into_db(pool, index, book_details, sentences);
       }
 
-      await insert_txt_documents(pool, doc_cnt);
       await insert_documents(insert, BATCH_SIZE, doc_cnt);
+      await insert_txt_documents(pool, doc_cnt);
     })
     .then(() => {
       return pool.query(`
