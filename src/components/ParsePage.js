@@ -13,7 +13,7 @@ import {
 import React from "react";
 
 import { useTranslation } from "./TranslationProvider";
-import { yale_to_hangul } from "./YaleToHangul";
+import { yale_to_hangul } from "./YaleToHangul.js";
 import { postData } from "./client_utils.js";
 
 function makeParseTreeDOM(parseTree) {

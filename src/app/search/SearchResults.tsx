@@ -26,7 +26,7 @@ import { findMatchingRanges, toText } from "@/components/Highlight";
 import Histogram from "@/components/Histogram";
 import HowToPage from "@/components/HowToPage";
 import { useTranslation } from "@/components/TranslationProvider";
-import { yale_to_hangul } from "@/components/YaleToHangul.mjs";
+import { yale_to_hangul } from "@/components/YaleToHangul.js";
 import {
   StyledTableCell,
   StyledTableRow,

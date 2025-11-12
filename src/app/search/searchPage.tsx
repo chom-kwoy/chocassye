@@ -17,7 +17,7 @@ import SearchResults from "@/app/search/SearchResults";
 import { Book, StatsResult } from "@/app/search/search";
 import TextFieldWithGugyeol from "@/components/TextFieldWithGugyeol";
 import { useTranslation } from "@/components/TranslationProvider";
-import { hangul_to_yale, yale_to_hangul } from "@/components/YaleToHangul.mjs";
+import { hangul_to_yale, yale_to_hangul } from "@/components/YaleToHangul.js";
 
 import DocSelector from "./DocSelector";
 

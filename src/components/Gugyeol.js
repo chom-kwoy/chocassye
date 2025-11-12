@@ -1,4 +1,4 @@
-import { hangul_to_yale } from "./YaleToHangul";
+import { hangul_to_yale } from "./YaleToHangul.js";
 
 export const GUGYEOL_READINGS = {
   "\uf696": "ㄱ/기",

@@ -21,7 +21,7 @@ import { darkTheme, lightTheme } from "@/app/themes";
 import { highlight } from "@/components/Highlight";
 import { ThemeContext } from "@/components/ThemeContext";
 import { useTranslation } from "@/components/TranslationProvider";
-import { yale_to_hangul } from "@/components/YaleToHangul.mjs";
+import { yale_to_hangul } from "@/components/YaleToHangul.js";
 import { IMAGE_BASE_URL } from "@/components/config";
 import { Sentence } from "@/utils/search";
 import useDimensions from "@/utils/useDimensions";

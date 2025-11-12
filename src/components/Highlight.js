@@ -1,6 +1,6 @@
 import { GUGYEOL_READINGS, GUGYEOL_REGEX } from "./Gugyeol";
 import { searchTerm2Regex } from "./Regex.mjs";
-import { yale_to_hangul } from "./YaleToHangul";
+import { yale_to_hangul } from "./YaleToHangul.js";
 import { highlightColors } from "./client_utils";
 
 // TODO: Generate these from YaleToHangul.js

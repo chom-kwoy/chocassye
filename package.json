@@ -16,6 +16,7 @@
     "async-mutex": "^0.5.0",
     "cookies-next": "^6.1.0",
     "es-hangul": "^2.3.5",
+    "escape-string-regexp": "^5.0.0",
     "glob": "^11.0.3",
     "http-proxy-middleware": "^3.0.5",
     "i18next": "^25.4.0",
