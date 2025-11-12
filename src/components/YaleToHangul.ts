@@ -236,7 +236,7 @@ export function composeHangul(string: string, get_index_map: boolean = false) {
 }
 
 export function yale_to_hangul(string: string, get_index_map: boolean = false) {
-  return ""; // TODO
+  return composeHangul(yaleTokenize(string));
 }
 
 export function hangul_to_yale(string: string, tone_all: boolean = false) {

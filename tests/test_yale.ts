@@ -1,4 +1,8 @@
-import { composeHangul, yaleTokenize } from "@/components/YaleToHangul.js";
+import {
+  composeHangul,
+  yaleTokenize,
+  yale_to_hangul,
+} from "@/components/YaleToHangul.js";
 
 function testEqual(result: string, expected: string) {
   if (result != expected) {
@@ -33,3 +37,6 @@ testEqual(composeHangul("ㅣㅇㅏ"), "ㅣ아");
 testEqual(composeHangul("ㅇㅏㅏㅓㅓ"), "아ㅏㅓㅓ");
 testEqual(composeHangul("ㅓㅇㅏ"), "ㅓ아");
 testEqual(composeHangul("ㅅㅓㅓㅇㅏ"), "서ㅓ아");
+
+testEqual(yale_to_hangul("chwoti"), "초디");
+testEqual(yale_to_hangul("macchse"), "마ퟹꥻᅥ");
