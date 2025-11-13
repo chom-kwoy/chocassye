@@ -1,3 +1,6 @@
+import UnicodeNames from "@unicode/unicode-16.0.0/Names/index.js";
+import escapeStringRegexp from "escape-string-regexp";
+
 // prettier-ignore
 export const CONSONANT_FORMS: { [key: string]: (string | null)[] } = {
   "ㄱ": ["ㄱ", "ᄀ", "ᆨ"],
@@ -30,7 +33,7 @@ export const CONSONANT_FORMS: { [key: string]: (string | null)[] } = {
   "ㅌ": ["ㅌ", "ᄐ", "ᇀ"],
   "ㅍ": ["ㅍ", "ᄑ", "ᇁ"],
   "ㅎ": ["ㅎ", "ᄒ", "ᇂ"],
-  "ㅥ": ["ㅥ", "ᄔ", null],
+  "ㅥ": ["ㅥ", "ᄔ", "ᇿ"],
   "ㅦ": ["ㅦ", "ᄕ", "ᇆ"],
   "ㅧ": ["ㅧ", "ᅛ", "ᇇ"],
   "ㅨ": ["ㅨ", null, "ᇈ"],
@@ -640,7 +643,7 @@ export function getTrailingChar(string: string): string | null {
   ) {
     return CONSONANT_FORMS[string][2];
   }
-  return "";
+  return null;
 }
 
 export function composeLetters(string: string): string | null {
@@ -686,3 +689,94 @@ const TRAILING_JAMOS: Set<string> = new Set<string>(
 export function isTrailingJamo(string: string): boolean {
   return TRAILING_JAMOS.has(string);
 }
+
+// Same as NFC, but don't partially precompose syllables
+// (e.g. k / a / f -> ka / f)
+export function convertToPrecomposed(string: string): string {
+  const modernLeading = LEADING_JAMOS.values()
+    .toArray()
+    .filter(
+      (ch) => 0x1100 <= ch.codePointAt(0)! && ch.codePointAt(0)! <= 0x1112,
+    )
+    .map(escapeStringRegexp)
+    .join("|");
+  const modernTrailing = TRAILING_JAMOS.values()
+    .toArray()
+    .filter(
+      (ch) => 0x11a8 <= ch.codePointAt(0)! && ch.codePointAt(0)! <= 0x11c2,
+    )
+    .map(escapeStringRegexp)
+    .join("|");
+  const nonModernTrailing = TRAILING_JAMOS.values()
+    .toArray()
+    .filter(
+      (ch) => !(0x11a8 <= ch.codePointAt(0)! && ch.codePointAt(0)! <= 0x11c2),
+    )
+    .map(escapeStringRegexp)
+    .join("|");
+  const modernVowelJamos = Object.values(VOWEL_FORMS)
+    .map((forms) => forms[1])
+    .filter((ch) => ch !== null)
+    .filter(
+      (ch) => 0x1161 <= ch.codePointAt(0)! && ch.codePointAt(0)! <= 0x1175,
+    )
+    .map(escapeStringRegexp)
+    .join("|");
+  const modernSyllable = new RegExp(
+    `(${modernLeading})(${modernVowelJamos})((?:${modernTrailing})|(?!${nonModernTrailing}))`,
+    "g",
+  );
+
+  function convert(match: string): string {
+    return match.normalize("NFC");
+  }
+
+  return string.replaceAll(modernSyllable, convert);
+}
+
+export const ORPHAN_REGEX = (() => {
+  const compatConsonants =
+    "(?:" +
+    Object.keys(CONSONANT_FORMS)
+      .filter((ch) =>
+        UnicodeNames.get(ch.codePointAt(0)!)!.includes("HANGUL LETTER"),
+      )
+      .map(escapeStringRegexp)
+      .join("|") +
+    ")";
+  const compatVowels =
+    "(?:" +
+    Object.keys(VOWEL_FORMS)
+      .filter((ch) =>
+        UnicodeNames.get(ch.codePointAt(0)!)!.includes("HANGUL LETTER"),
+      )
+      .map(escapeStringRegexp)
+      .join("|") +
+    ")";
+  const leadingJamos =
+    "(?:" +
+    LEADING_JAMOS.values().toArray().map(escapeStringRegexp).join("|") +
+    ")";
+  const trailingJamos =
+    "(?:" +
+    TRAILING_JAMOS.values().toArray().map(escapeStringRegexp).join("|") +
+    ")";
+  const vowelJamos =
+    "(?:" +
+    Object.values(VOWEL_FORMS)
+      .map((forms) => forms[1])
+      .filter((ch) => ch !== null)
+      .map(escapeStringRegexp)
+      .join("|") +
+    ")";
+  const compatLetters = `(?:${compatConsonants}|${compatVowels})`;
+  const leadingJamosWithoutVowels = `(?:${leadingJamos}(?!${vowelJamos}))`;
+  const trailingJamosWithoutVowels = `(?:(?<!${vowelJamos})${trailingJamos})`;
+  const vowelJamosWithoutLeading = `(?:(?:(?<!${leadingJamos})|\u115f)${vowelJamos})`;
+  return [
+    compatLetters,
+    leadingJamosWithoutVowels,
+    trailingJamosWithoutVowels,
+    vowelJamosWithoutLeading,
+  ].join("|");
+})();

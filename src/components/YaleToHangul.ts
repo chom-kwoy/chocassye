@@ -2,11 +2,13 @@ import escapeStringRegexp from "escape-string-regexp";
 
 import {
   CONSONANT_FORMS,
+  ORPHAN_REGEX,
   VOWEL_FORMS,
   YALE_TO_HANGUL_CONSONANTS,
   YALE_TO_HANGUL_TONE_MARKS,
   YALE_TO_HANGUL_VOWELS,
   composeLetters,
+  convertToPrecomposed,
   getLeadingChar,
   getTrailingChar,
   getVowelChar,
@@ -16,22 +18,6 @@ import {
 } from "@/components/HangulData";
 
 import { PUA_CONV_TABLE } from "./PuaToUni";
-
-// Tokenizes romanized string into hangul letters
-// e.g. chwoti -> ch wo t i -> ㅊㅗㄷㅣ
-export function yaleTokenize(string: string): string {
-  const fullMap = {
-    ...YALE_TO_HANGUL_CONSONANTS,
-    ...YALE_TO_HANGUL_VOWELS,
-    ...YALE_TO_HANGUL_TONE_MARKS,
-  };
-  const list = Object.entries(fullMap);
-  // sort list by decreasing length of first component of each item
-  list.sort((a, b) => b[0].length - a[0].length);
-  const regexStr = list.map((x) => escapeStringRegexp(x[0])).join("|");
-  const regex = new RegExp(regexStr, "g");
-  return string.replaceAll(regex, (match) => fullMap[match]);
-}
 
 const COMPAT_VOWELS_RE =
   /[ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣㆇㆈㆉㆊㆋㆌㆍㆎ]/;
@@ -213,7 +199,7 @@ class StateMachine {
 }
 
 function postProcess(string: string): string {
-  string = string.normalize("NFC");
+  string = convertToPrecomposed(string);
 
   function replaceStandaloneVowels(
     match: string,
@@ -235,8 +221,51 @@ export function composeHangul(string: string, get_index_map: boolean = false) {
   return new StateMachine().run(string);
 }
 
+export function countOrphanedSyllables(string: string) {
+  string = composeHangul(string);
+  const matches = string.matchAll(new RegExp(ORPHAN_REGEX, "g")).toArray();
+  return matches.length;
+}
+
 export function yale_to_hangul(string: string, get_index_map: boolean = false) {
-  return composeHangul(yaleTokenize(string));
+  const fullMap = {
+    ...YALE_TO_HANGUL_CONSONANTS,
+    ...YALE_TO_HANGUL_VOWELS,
+    ...YALE_TO_HANGUL_TONE_MARKS,
+  };
+
+  const tokenizedStrings: Set<string>[] = [new Set<string>([""])];
+
+  for (let l = 1; l <= string.length; ++l) {
+    let curMinOrphans = Infinity;
+    const curTokenizedSet = new Set<string>();
+    for (let inc = 1; inc <= 4; ++inc) {
+      if (l - inc < 0) {
+        continue;
+      }
+      const part = fullMap[string.substring(l - inc, l)];
+      if (part === undefined) {
+        continue;
+      }
+      const prefixSet = tokenizedStrings[l - inc];
+      for (const prefix of prefixSet) {
+        const nOrphans = countOrphanedSyllables(prefix + part);
+        if (curMinOrphans > nOrphans) {
+          curMinOrphans = nOrphans;
+          curTokenizedSet.clear();
+          curTokenizedSet.add(prefix + part);
+        } else if (curMinOrphans == nOrphans) {
+          curTokenizedSet.add(prefix + part);
+        }
+      }
+    }
+    tokenizedStrings.push(curTokenizedSet);
+  }
+
+  const answerSet = tokenizedStrings[string.length].values().toArray();
+  answerSet.sort();
+
+  return composeHangul(answerSet[0]);
 }
 
 export function hangul_to_yale(string: string, tone_all: boolean = false) {
