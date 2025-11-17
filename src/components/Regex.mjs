@@ -1,6 +1,6 @@
 import escapeStringRegexp from "escape-string-regexp";
 
-import { hangul_to_yale } from "./YaleToHangul.ts";
+import { hangulToYale } from "./YaleToHangul.ts";
 
 export function searchTerm2Regex(text, ignoreSep = false) {
   if (text.length >= 2 && text.startsWith("/") && text.endsWith("/")) {
@@ -8,7 +8,7 @@ export function searchTerm2Regex(text, ignoreSep = false) {
     return new RegExp(regexText, "g");
   }
 
-  text = hangul_to_yale(text);
+  text = hangulToYale(text);
 
   let strippedText = text;
   if (text.startsWith("^")) {

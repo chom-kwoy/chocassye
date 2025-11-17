@@ -1,6 +1,8 @@
+import { invertMapping, replaceAndMap } from "@/components/StringMapping.ts";
+
 import { GUGYEOL_READINGS, GUGYEOL_REGEX } from "./Gugyeol";
 import { searchTerm2Regex } from "./Regex.mjs";
-import { yale_to_hangul } from "./YaleToHangul.js";
+import { yaleToHangul } from "./YaleToHangul.js";
 import { highlightColors } from "./client_utils";
 
 // TODO: Generate these from YaleToHangul.js
@@ -11,154 +13,16 @@ const TONED_SYLLABLE_REGEX =
 const UNTONED_SYLLABLE_REGEX =
   /((?:psk|pst|psc|pth|ss\/|cc\/|ch\/|ss\\|cc\\|ch\\|kk|nn|tt|pp|ss|GG|cc|ch|kh|th|ph|pk|pt|ps|pc|sk|sn|st|sp|sc|sh|hh|ng|s\/|c\/|s\\|c\\|k|n|t|l|m|p|s|G|c|h|W|z|q|`)(?:ywey|yway|yay|yey|way|woy|wey|wuy|yoy|yuy|ywe|ywa|ay|ya|ey|ye|wo|wa|yo|wu|we|yu|uy|oy|a|e|u|i|o)(?:lth|lph|nth|lks|mch|ngs|kk|ks|nc|nh|lk|lm|lp|ls|lh|ps|ss|ch|kh|th|ph|nt|ns|nz|lz|lq|mk|mp|ms|mz|sk|st|ng|pl|k|n|t|l|m|p|s|G|c|h|M|W|z|f|q|))(?![^<]*>)/g;
 
-function invert_mapping(mapping) {
-  if (mapping.length === 0) {
-    return [];
-  }
-  let inv_mapping = Array(mapping[mapping.length - 1][1]);
-  for (let i = 0; i < inv_mapping.length; ++i) {
-    inv_mapping[i] = [Infinity, 0];
-  }
-  for (let i = 0; i < mapping.length; ++i) {
-    for (let j = mapping[i][0]; j < mapping[i][1]; ++j) {
-      inv_mapping[j] = [
-        Math.min(inv_mapping[j][0], i),
-        Math.max(inv_mapping[j][1], i + 1),
-      ];
-    }
-  }
-  // ensure monotonicity
-  let last_mapping = 0;
-  for (let i = 0; i < inv_mapping.length; ++i) {
-    let begin = Math.min(inv_mapping[i][0], last_mapping);
-    let end = Math.max(inv_mapping[i][1], begin);
-    inv_mapping[i] = [begin, end];
-    last_mapping = end;
-  }
-  return inv_mapping;
-}
-
-function replace_and_map(string, pattern, replace_func, prev_mapping = null) {
-  let inv_mapper_begin, inv_mapper_end;
-  let mapping_size;
-  if (prev_mapping === null) {
-    inv_mapper_begin = function (i) {
-      return i;
-    };
-    inv_mapper_end = function (i) {
-      return i + 1;
-    };
-    mapping_size = string.length;
-  } else {
-    let inv_mapping = invert_mapping(prev_mapping);
-    inv_mapper_begin = function (i) {
-      return inv_mapping[i][0];
-    };
-    inv_mapper_end = function (i) {
-      return inv_mapping[i][1];
-    };
-    mapping_size = prev_mapping.length;
-  }
-
-  let last_offset = 0;
-  let dst_offset = 0;
-  let mapping = Array(mapping_size);
-  for (let i = 0; i < mapping.length; ++i) {
-    mapping[i] = [Infinity, 0];
-  }
-
-  let orig_string_length = string.length;
-  string = string.replace(pattern, function (match, ...rest) {
-    let sub = replace_func(match, ...rest);
-    let sub_mapping = null;
-    if (Array.isArray(sub)) {
-      [sub, sub_mapping] = sub;
-    }
-
-    let offset = rest[rest.length - 2];
-
-    // before replaced part
-    for (let i = 0; i < offset - last_offset; ++i) {
-      for (
-        let j = inv_mapper_begin(last_offset + i);
-        j < inv_mapper_end(last_offset + i);
-        ++j
-      ) {
-        mapping[j] = [
-          Math.min(mapping[j][0], dst_offset + i),
-          Math.max(mapping[j][1], dst_offset + i + 1),
-        ];
-      }
-    }
-
-    dst_offset += offset - last_offset;
-    last_offset = offset;
-
-    // replaced part
-    for (let i = 0; i < match.length; ++i) {
-      let dst_begin = dst_offset;
-      let dst_end = dst_offset + sub.length;
-
-      if (sub_mapping !== null) {
-        dst_begin = dst_offset + sub_mapping[i][0];
-        dst_end = dst_offset + sub_mapping[i][1];
-      }
-
-      for (
-        let j = inv_mapper_begin(last_offset + i);
-        j < inv_mapper_end(last_offset + i);
-        ++j
-      ) {
-        mapping[j] = [
-          Math.min(mapping[j][0], dst_begin),
-          Math.max(mapping[j][1], dst_end),
-        ];
-      }
-    }
-
-    dst_offset += sub.length;
-    last_offset += match.length;
-
-    return sub;
-  });
-
-  // remaining part
-  let offset = orig_string_length;
-  for (let i = 0; i < offset - last_offset; ++i) {
-    for (
-      let j = inv_mapper_begin(last_offset + i);
-      j < inv_mapper_end(last_offset + i);
-      ++j
-    ) {
-      mapping[j] = [
-        Math.min(mapping[j][0], dst_offset + i),
-        Math.max(mapping[j][1], dst_offset + i + 1),
-      ];
-    }
-  }
-
-  // ensure monotonicity
-  let last_mapping = 0;
-  for (let i = 0; i < mapping.length; ++i) {
-    let begin = Math.min(mapping[i][0], last_mapping);
-    let end = Math.max(mapping[i][1], begin);
-    mapping[i] = [begin, end];
-    last_mapping = end;
-  }
-
-  return [string, mapping];
-}
-
 export function toText(sentence, ignoreSep) {
   let mapping;
 
   // Remove HTML tags
-  [sentence, mapping] = replace_and_map(sentence, /(<[^>]*>)/g, function () {
+  [sentence, mapping] = replaceAndMap(sentence, /(<[^>]*>)/g, function () {
     return ".";
   });
 
   // Select full syllables
-  [sentence, mapping] = replace_and_map(
+  [sentence, mapping] = replaceAndMap(
     sentence,
     UNTONED_SYLLABLE_REGEX,
     function (_, syllable) {
@@ -169,7 +33,7 @@ export function toText(sentence, ignoreSep) {
 
   if (ignoreSep) {
     // Remove spaces, periods, and caret if ignoreSep is set
-    [sentence, mapping] = replace_and_map(
+    [sentence, mapping] = replaceAndMap(
       sentence,
       /[ .^]/g,
       function () {
@@ -186,12 +50,12 @@ export function toTextIgnoreTone(sentence, ignoreSep) {
   let mapping;
 
   // Remove HTML tags
-  [sentence, mapping] = replace_and_map(sentence, /(<[^>]*>)/g, function () {
+  [sentence, mapping] = replaceAndMap(sentence, /(<[^>]*>)/g, function () {
     return ".";
   });
 
   // Replace toned syllables with untoned syllables
-  [sentence, mapping] = replace_and_map(
+  [sentence, mapping] = replaceAndMap(
     sentence,
     TONED_SYLLABLE_REGEX,
     function (_, syllable) {
@@ -202,7 +66,7 @@ export function toTextIgnoreTone(sentence, ignoreSep) {
 
   if (ignoreSep) {
     // Remove spaces, periods, and caret if ignoreSep is set
-    [sentence, mapping] = replace_and_map(
+    [sentence, mapping] = replaceAndMap(
       sentence,
       /[ .^]/g,
       function () {
@@ -221,11 +85,11 @@ export function toDisplayHTML(sentence, romanize = false) {
 
   // yale to hangul (ignoring tags)
   if (!romanize) {
-    [sentence, mapping] = replace_and_map(
+    [sentence, mapping] = replaceAndMap(
       sentence,
       /([^>[\]]+)(?![^<]*>)/g,
       function (match) {
-        let { result, mapping } = yale_to_hangul(match, true);
+        let { result, mapping } = yaleToHangul(match, true);
         return [result, mapping];
       },
       mapping,
@@ -233,11 +97,11 @@ export function toDisplayHTML(sentence, romanize = false) {
   }
 
   // replace comments
-  [sentence, mapping] = replace_and_map(
+  [sentence, mapping] = replaceAndMap(
     sentence,
     /<!--([\s\S\n]*?)-->/g,
     function (_, comment) {
-      comments.push(yale_to_hangul(comment));
+      comments.push(yaleToHangul(comment));
       let commentIdx = comments.length;
       return `<a class="footnoteLink" id="notefrom${commentIdx}" href="#note${commentIdx}" data-footnotenum="${commentIdx}"></a>`;
     },
@@ -245,7 +109,7 @@ export function toDisplayHTML(sentence, romanize = false) {
   );
 
   // replace opening/closing custom tags with span
-  [sentence, mapping] = replace_and_map(
+  [sentence, mapping] = replaceAndMap(
     sentence,
     /<(\/)?([^ >]*)[^>]*>/g,
     function (match, closing, tag) {
@@ -261,7 +125,7 @@ export function toDisplayHTML(sentence, romanize = false) {
   );
 
   // replace [] with <span> anno tags
-  [sentence, mapping] = replace_and_map(
+  [sentence, mapping] = replaceAndMap(
     sentence,
     /(\[|\])/g,
     function (match) {
@@ -276,7 +140,7 @@ export function toDisplayHTML(sentence, romanize = false) {
 
   // Render tone marks on top of syllable
   if (!romanize) {
-    [sentence, mapping] = replace_and_map(
+    [sentence, mapping] = replaceAndMap(
       sentence,
       HANGUL_REGEX,
       function (_, syllable, tone) {
@@ -293,7 +157,7 @@ export function toDisplayHTML(sentence, romanize = false) {
   }
 
   // Add tooltips to gugyeol characters
-  [sentence, mapping] = replace_and_map(
+  [sentence, mapping] = replaceAndMap(
     sentence,
     GUGYEOL_REGEX,
     function (ch) {
@@ -311,7 +175,7 @@ function getMatchingRanges(
   targetMapping,
   displayHTMLMapping = null,
 ) {
-  let inv_mapping = invert_mapping(targetMapping);
+  let inv_mapping = invertMapping(targetMapping);
 
   let match_ranges = [];
   let match;

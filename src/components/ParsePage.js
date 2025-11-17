@@ -13,7 +13,7 @@ import {
 import React from "react";
 
 import { useTranslation } from "./TranslationProvider";
-import { yale_to_hangul } from "./YaleToHangul.js";
+import { yaleToHangul } from "./YaleToHangul.js";
 import { postData } from "./client_utils.js";
 
 function makeParseTreeDOM(parseTree) {
@@ -54,7 +54,7 @@ function makeParseTreeDOM(parseTree) {
           minHeight: "5px",
         }}
       >
-        {yale_to_hangul(parseTree.canonical_form ?? "")}
+        {yaleToHangul(parseTree.canonical_form ?? "")}
       </Box>
       <Box display="flex" justifyContent="center" alignItems="center">
         {parseTree.label}

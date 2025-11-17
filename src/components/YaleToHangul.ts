@@ -1,4 +1,4 @@
-import escapeStringRegexp from "escape-string-regexp";
+import assert from "node:assert";
 
 import {
   CONSONANT_FORMS,
@@ -16,6 +16,7 @@ import {
   isTrailingJamo,
   toCompat,
 } from "@/components/HangulData";
+import { Mapping, replaceAndMap } from "@/components/StringMapping";
 
 import { PUA_CONV_TABLE } from "./PuaToUni";
 
@@ -46,6 +47,7 @@ class StateMachine {
   output: string = "";
   curState: State = "empty";
   curPartial: string = "";
+  mapping: Mapping = [];
 
   checkIfCommittable(composed: string, state: State): boolean {
     if (state === "leading") {
@@ -102,6 +104,10 @@ class StateMachine {
           this.curState = "leading";
         }
 
+        for (let i = 0; i < l; ++i) {
+          this.mapping.push([this.output.length - 1, this.output.length]);
+        }
+
         this.curPartial = this.curPartial.substring(l);
         return true;
       }
@@ -109,7 +115,7 @@ class StateMachine {
     return true;
   }
 
-  run(composingText: string): string {
+  run(composingText: string): [string, Mapping] {
     for (const ch of composingText) {
       switch (this.curState) {
         case "empty":
@@ -128,11 +134,10 @@ class StateMachine {
             this.curPartial += ch;
 
             if (this.commitPartialIfDone() && this.curPartial.length > 0) {
-              const compat = toCompat(
-                this.output.substring(this.output.length - 1),
-              );
-              this.output = this.output.substring(0, this.output.length - 1);
-              this.output += compat;
+              // Convert last character to compat
+              this.output =
+                this.output.substring(0, this.output.length - 1) +
+                toCompat(this.output.substring(this.output.length - 1));
               this.curState = "leading";
             }
           } else if (Object.hasOwn(VOWEL_FORMS, ch)) {
@@ -189,17 +194,22 @@ class StateMachine {
     if (this.output.length > 0) {
       const lastOne = this.output.substring(this.output.length - 1);
       if (isLeadingJamo(lastOne)) {
-        this.output = this.output.substring(0, this.output.length - 1);
-        this.output += toCompat(lastOne);
+        this.output =
+          this.output.substring(0, this.output.length - 1) + toCompat(lastOne);
       }
     }
 
-    return postProcess(this.output);
+    assert(
+      this.mapping.length === composingText.length,
+      `Mapping length != composingText.length: ${composingText}`,
+    );
+
+    return postProcess(this.output, this.mapping);
   }
 }
 
-function postProcess(string: string): string {
-  string = convertToPrecomposed(string);
+function postProcess(string: string, mapping: Mapping): [string, Mapping] {
+  [string, mapping] = convertToPrecomposed(string, mapping);
 
   function replaceStandaloneVowels(
     match: string,
@@ -212,33 +222,44 @@ function postProcess(string: string): string {
     return match;
   }
 
-  string = string.replaceAll(/\u115f(.)(?=(.?))/g, replaceStandaloneVowels);
+  [string, mapping] = replaceAndMap(
+    string,
+    /\u115f(.)(?=(.?))/g,
+    replaceStandaloneVowels,
+    mapping,
+  );
 
-  return string;
+  return [string, mapping];
 }
 
-export function composeHangul(string: string, get_index_map: boolean = false) {
-  return new StateMachine().run(string);
+export function composeHangul(
+  string: string,
+  mapping: Mapping | null = null,
+): [string, Mapping] {
+  const [resultString, resultMatch] = new StateMachine().run(string);
+  return [resultString, resultMatch];
 }
 
 export function countOrphanedSyllables(string: string) {
-  string = composeHangul(string);
-  const matches = string.matchAll(new RegExp(ORPHAN_REGEX, "g")).toArray();
+  const [composed, _] = composeHangul(string);
+  const matches = composed.matchAll(new RegExp(ORPHAN_REGEX, "g")).toArray();
   return matches.length;
 }
 
-export function yale_to_hangul(string: string, get_index_map: boolean = false) {
+function yaleToHangulImpl(string: string): [string, Mapping] {
   const fullMap = {
     ...YALE_TO_HANGUL_CONSONANTS,
     ...YALE_TO_HANGUL_VOWELS,
     ...YALE_TO_HANGUL_TONE_MARKS,
   };
 
-  const tokenizedStrings: Set<string>[] = [new Set<string>([""])];
+  const tokenizedStrings: Map<string, Mapping>[] = [
+    new Map<string, Mapping>([["", []]]),
+  ];
 
   for (let l = 1; l <= string.length; ++l) {
     let curMinOrphans = Infinity;
-    const curTokenizedSet = new Set<string>();
+    const curTokenizedSet = new Map<string, Mapping>();
     for (let inc = 1; inc <= 4; ++inc) {
       if (l - inc < 0) {
         continue;
@@ -248,26 +269,73 @@ export function yale_to_hangul(string: string, get_index_map: boolean = false) {
         continue;
       }
       const prefixSet = tokenizedStrings[l - inc];
-      for (const prefix of prefixSet) {
+      for (const [prefix, prefixMapping] of prefixSet.entries()) {
         const nOrphans = countOrphanedSyllables(prefix + part);
+        const newMapping = [...prefixMapping];
+        for (let i = 0; i < inc; ++i) {
+          newMapping.push([prefix.length, prefix.length + part.length]);
+        }
         if (curMinOrphans > nOrphans) {
           curMinOrphans = nOrphans;
           curTokenizedSet.clear();
-          curTokenizedSet.add(prefix + part);
+          curTokenizedSet.set(prefix + part, newMapping);
         } else if (curMinOrphans == nOrphans) {
-          curTokenizedSet.add(prefix + part);
+          curTokenizedSet.set(prefix + part, newMapping);
         }
       }
     }
     tokenizedStrings.push(curTokenizedSet);
   }
 
-  const answerSet = tokenizedStrings[string.length].values().toArray();
-  answerSet.sort();
+  const answerSet = tokenizedStrings[string.length].entries().toArray();
 
-  return composeHangul(answerSet[0]);
+  if (answerSet.length === 0) {
+    // Cannot convert
+    const identityMapping: Mapping = [];
+    for (let i = 0; i < string.length; ++i) {
+      identityMapping.push([i, i + 1]);
+    }
+    return [string, identityMapping];
+  }
+
+  const [resultString, resultMapping] = answerSet[0];
+
+  return composeHangul(resultString, resultMapping);
 }
 
-export function hangul_to_yale(string: string, tone_all: boolean = false) {
+export function yaleToHangul(string: string, getIndexMap?: false): string;
+export function yaleToHangul(
+  string: string,
+  getIndexMap: true,
+): [string, Mapping];
+
+export function yaleToHangul(string: string, getIndexMap: boolean = false) {
+  function replaceFunc(
+    _: string,
+    alphabetic: string,
+    other: string,
+  ): string | [string, Mapping] {
+    if (other === undefined) {
+      return yaleToHangulImpl(alphabetic);
+    } else {
+      return other;
+    }
+  }
+
+  const [resultString, resultMapping] = replaceAndMap(
+    string,
+    /([a-zA-Z]+)|([^a-zA-Z]+)/g,
+    replaceFunc,
+  );
+
+  if (getIndexMap) {
+    return [resultString, resultMapping];
+  }
+  return resultString;
+}
+
+console.log(yaleToHangul("chwoti", true));
+
+export function hangulToYale(string: string, toneAll: boolean = false) {
   return ""; // TODO
 }

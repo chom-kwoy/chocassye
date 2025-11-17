@@ -26,7 +26,7 @@ import { findMatchingRanges, toText } from "@/components/Highlight";
 import Histogram from "@/components/Histogram";
 import HowToPage from "@/components/HowToPage";
 import { useTranslation } from "@/components/TranslationProvider";
-import { yale_to_hangul } from "@/components/YaleToHangul.js";
+import { yaleToHangul } from "@/components/YaleToHangul.js";
 import {
   StyledTableCell,
   StyledTableRow,
@@ -137,7 +137,7 @@ function getResultMatches(
 
       const parts: string[] = [];
       for (const range of match_ranges) {
-        parts.push(yale_to_hangul(rawText.slice(range[0], range[1])) as string);
+        parts.push(yaleToHangul(rawText.slice(range[0], range[1])) as string);
       }
 
       book_parts.push(parts);

@@ -1,6 +1,8 @@
 import UnicodeNames from "@unicode/unicode-16.0.0/Names/index.js";
 import escapeStringRegexp from "escape-string-regexp";
 
+import { Mapping, replaceAndMap } from "@/components/StringMapping";
+
 // prettier-ignore
 export const CONSONANT_FORMS: { [key: string]: (string | null)[] } = {
   "ㄱ": ["ㄱ", "ᄀ", "ᆨ"],
@@ -692,7 +694,10 @@ export function isTrailingJamo(string: string): boolean {
 
 // Same as NFC, but don't partially precompose syllables
 // (e.g. k / a / f -> ka / f)
-export function convertToPrecomposed(string: string): string {
+export function convertToPrecomposed(
+  string: string,
+  mapping: Mapping,
+): [string, Mapping] {
   const modernLeading = LEADING_JAMOS.values()
     .toArray()
     .filter(
@@ -731,7 +736,7 @@ export function convertToPrecomposed(string: string): string {
     return match.normalize("NFC");
   }
 
-  return string.replaceAll(modernSyllable, convert);
+  return replaceAndMap(string, modernSyllable, convert, mapping);
 }
 
 export const ORPHAN_REGEX = (() => {

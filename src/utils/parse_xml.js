@@ -5,7 +5,7 @@ import { glob } from "glob";
 import jsdom from "jsdom";
 import { promisify } from "util";
 
-import { hangul_to_yale } from "../components/YaleToHangul.ts";
+import { hangulToYale } from "../components/YaleToHangul.ts";
 import {
   parse_year_string,
   year_and_bookname_from_filename,
@@ -158,13 +158,13 @@ function add_file(file, xml) {
     } else {
       try {
         let html = uni(sentence.innerHTML.trim());
-        html = hangul_to_yale(html, has_tone);
+        html = hangulToYale(html, has_tone);
         let text = uni(sentence.textContent.trim());
         let text_with_tone = null;
         if (has_tone) {
-          text_with_tone = hangul_to_yale(text, true);
+          text_with_tone = hangulToYale(text, true);
         }
-        text = hangul_to_yale(text, false);
+        text = hangulToYale(text, false);
 
         let attr = sentence.attributes;
         let page =

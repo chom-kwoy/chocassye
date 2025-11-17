@@ -1,4 +1,4 @@
-import { hangul_to_yale } from "./YaleToHangul.js";
+import { hangulToYale } from "./YaleToHangul.js";
 
 export const GUGYEOL_READINGS = {
   "\uf696": "ㄱ/기",
@@ -84,7 +84,7 @@ export function suggestGugyeol(input) {
   if (input.length === 0) {
     return [];
   }
-  input = hangul_to_yale(input);
+  input = hangulToYale(input);
   let suggestions = [];
   let visited = new Set();
   for (let len = 1; len <= 4; len++) {
@@ -95,9 +95,7 @@ export function suggestGugyeol(input) {
         norm_pron = pron.slice(2, -1);
       }
       if (
-        norm_pron
-          .split("/")
-          .some((p) => hangul_to_yale(p).startsWith(searchPart))
+        norm_pron.split("/").some((p) => hangulToYale(p).startsWith(searchPart))
       ) {
         if (visited.has(gugyeol)) {
           continue;

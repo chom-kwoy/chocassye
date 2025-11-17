@@ -21,7 +21,7 @@ import { darkTheme, lightTheme } from "@/app/themes";
 import { highlight } from "@/components/Highlight";
 import { ThemeContext } from "@/components/ThemeContext";
 import { useTranslation } from "@/components/TranslationProvider";
-import { yale_to_hangul } from "@/components/YaleToHangul.js";
+import { yaleToHangul } from "@/components/YaleToHangul.js";
 import { IMAGE_BASE_URL } from "@/components/config";
 import { Sentence } from "@/utils/search";
 import useDimensions from "@/utils/useDimensions";
@@ -77,7 +77,7 @@ export function SentenceWithCtx(props: {
   const [copyNotifOpen, setCopyNotifOpen] = React.useState(false);
 
   const makeWiktionaryCitation = React.useCallback(() => {
-    const text = yale_to_hangul(
+    const text = yaleToHangul(
       props.sentenceWithCtx.mainSentence.text_with_tone ??
         props.sentenceWithCtx.mainSentence.text,
     ) as string;
@@ -98,7 +98,7 @@ export function SentenceWithCtx(props: {
       ];
     const chinese =
       prevSentence?.lang === "chi"
-        ? (yale_to_hangul(prevSentence.text) as string)
+        ? (yaleToHangul(prevSentence.text) as string)
         : undefined;
     if (chinese !== undefined) {
       items.push(`origlang=lzh`);

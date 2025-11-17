@@ -6,7 +6,7 @@ import path from "path";
 import { promisify } from "util";
 
 import {
-  hangul_to_yale,
+  hangulToYale,
   normalize_string,
 } from "../src/components/YaleToHangul.ts";
 import { insert_into_db } from "../src/utils/insert_into_db.js";
@@ -62,7 +62,7 @@ function parse_format_1(file, lines) {
 
     const type = line.includes("[head]") ? "title" : "main";
 
-    const text = hangul_to_yale(line)
+    const text = hangulToYale(line)
       .replaceAll("[note]", "[")
       .replaceAll("[/note]", "]")
       .replaceAll("[head]", "")
@@ -175,7 +175,7 @@ function parse_format_2(file, lines) {
         sent = sent.replaceAll("[title]", "");
       }
 
-      const text = hangul_to_yale(sent);
+      const text = hangulToYale(sent);
       const text_without_sep = text.replace(/[ .^]/g, "");
 
       sentences.push({

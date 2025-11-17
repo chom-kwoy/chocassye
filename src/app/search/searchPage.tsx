@@ -17,7 +17,7 @@ import SearchResults from "@/app/search/SearchResults";
 import { Book, StatsResult } from "@/app/search/search";
 import TextFieldWithGugyeol from "@/components/TextFieldWithGugyeol";
 import { useTranslation } from "@/components/TranslationProvider";
-import { hangul_to_yale, yale_to_hangul } from "@/components/YaleToHangul.js";
+import { hangulToYale, yaleToHangul } from "@/components/YaleToHangul.js";
 
 import DocSelector from "./DocSelector";
 
@@ -74,8 +74,8 @@ export function SearchPage(props: {
   const [displayHangul, setDisplayHangul] = React.useState(true);
   const [copyNotifOpen, setCopyNotifOpen] = React.useState(false);
 
-  const hangulSearchTerm = yale_to_hangul(props.term) as string;
-  const normalizedSearchTerm = hangul_to_yale(props.term);
+  const hangulSearchTerm = yaleToHangul(props.term) as string;
+  const normalizedSearchTerm = hangulToYale(props.term);
 
   return (
     <Grid container spacing={{ xs: 0.5, sm: 1 }} alignItems="center">
