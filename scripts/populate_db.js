@@ -137,7 +137,9 @@ async function populate_db(database_name, doc_cnt) {
 }
 
 if (!process.env.DB_NAME) {
-  console.error("Please set the DB_NAME environment variable.");
+  console.error(
+    "Please set the DB_NAME environment variable. (optional: set DOC_CNT)",
+  );
   process.exit(1);
 }
 const doc_cnt = process.env.DOC_CNT ? parseInt(process.env.DOC_CNT) : null;
