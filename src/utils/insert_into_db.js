@@ -22,6 +22,18 @@ async function save_to_file(prefix, ngram_map, index) {
   await promisify(fs.writeFile)(`./index/${prefix}_${index}.bin`, buf);
 }
 
+async function save_setences(sentences, index) {
+  const packr = new Packr();
+  const buf = packr.pack(
+    new Map([
+      ["ids", sentences.map((s) => s.id)],
+      ["text", sentences.map((s) => s.text)],
+      ["nosep", sentences.map((s) => s.nosep ?? s.text)],
+    ]),
+  );
+  await promisify(fs.writeFile)(`./index/sentences_${index}.bin`, buf);
+}
+
 export async function insert_into_db(pool, index, book_details, sentences) {
   await deadlock_retry(
     pool,
@@ -51,6 +63,8 @@ export async function insert_into_db(pool, index, book_details, sentences) {
   const ngram_map_common = new Map();
   const ngram_map_sep = new Map();
   const ngram_map_nosep = new Map();
+
+  const save_sentences = [];
   for (let sentence of sentences) {
     await deadlock_retry(
       pool,
@@ -137,11 +151,21 @@ export async function insert_into_db(pool, index, book_details, sentences) {
           ngram_map_nosep.set(ngram, [sentence_id]);
         }
       }
+
+      save_sentences.push({
+        id: sentence_id,
+        text: sentence.text,
+        nosep: sentence.text_without_sep,
+      });
     });
   }
-  await save_to_file("common", ngram_map_common, index);
-  await save_to_file("sep", ngram_map_sep, index);
-  await save_to_file("nosep", ngram_map_nosep, index);
+
+  await Promise.all([
+    save_to_file("common", ngram_map_common, index),
+    save_to_file("sep", ngram_map_sep, index),
+    save_to_file("nosep", ngram_map_nosep, index),
+    save_setences(save_sentences, index),
+  ]);
 }
 
 function pg_insert_ngrams(sentence, sentence_id, pool) {
