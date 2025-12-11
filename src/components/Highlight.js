@@ -171,7 +171,7 @@ export function toText(sentence, ignoreSep) {
     // Remove spaces, periods, and caret if ignoreSep is set
     [sentence, mapping] = replace_and_map(
       sentence,
-      /[ .^]/g,
+      /[ .^@]/g,
       function () {
         return "";
       },
@@ -204,7 +204,7 @@ export function toTextIgnoreTone(sentence, ignoreSep) {
     // Remove spaces, periods, and caret if ignoreSep is set
     [sentence, mapping] = replace_and_map(
       sentence,
-      /[ .^]/g,
+      /[ .^@]/g,
       function () {
         return "";
       },

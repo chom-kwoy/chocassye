@@ -71,7 +71,7 @@ function parse_format_1(file, lines) {
       .replaceAll("[/add]", "")
       .trim();
 
-    const text_without_sep = text.replace(/[ .^]/g, "");
+    const text_without_sep = text.replace(/[ .^@]/g, "");
 
     sentences.push({
       filename: filename,
@@ -176,7 +176,7 @@ function parse_format_2(file, lines) {
       }
 
       const text = hangul_to_yale(sent);
-      const text_without_sep = text.replace(/[ .^]/g, "");
+      const text_without_sep = text.replace(/[ .^@]/g, "");
 
       sentences.push({
         filename: filename,

@@ -19,7 +19,7 @@ export function searchTerm2Regex(text, ignoreSep = false) {
   }
   function applyIgnoreSep(s) {
     if (ignoreSep) {
-      s = s.replace(/[ .^]/g, "");
+      s = s.replace(/[ .^@]/g, "");
     }
     return s;
   }
