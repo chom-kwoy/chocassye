@@ -36,8 +36,10 @@ async function populate_db(database_name, doc_cnt) {
       return pool;
     });
 
-  // make new directory called `index`
-  fs.mkdirSync("index", { recursive: true });
+  // load extension
+  await pool.query("create extension corpussearch;").catch((err) => {
+    console.error(err);
+  });
 
   return pool
     .query("DROP TABLE IF EXISTS books, sentences CASCADE;")
@@ -87,12 +89,8 @@ async function populate_db(database_name, doc_cnt) {
       const BATCH_SIZE = process.env.BATCH ? parseInt(process.env.BATCH) : 256;
       console.log("Batch size:", BATCH_SIZE);
 
-      function insert(index, book_details, sentences) {
-        return insert_into_db(pool, index, book_details, sentences);
-      }
-
-      await insert_documents(insert, BATCH_SIZE, doc_cnt);
-      await insert_txt_documents(pool, doc_cnt);
+      await insert_documents(pool, BATCH_SIZE, doc_cnt);
+      await insert_txt_documents(pool, BATCH_SIZE, doc_cnt);
     })
     .then(() => {
       return pool.query(`
@@ -128,6 +126,24 @@ async function populate_db(database_name, doc_cnt) {
           (filename COLLATE pg_catalog."default" ASC NULLS LAST)
           WITH (deduplicate_items=True)
           TABLESPACE pg_default;
+      `);
+    })
+    .then(() => {
+      return pool.query(`
+        CREATE INDEX IF NOT EXISTS my_ibpe_index_1 ON sentences 
+          USING ibpe (text) with (
+            tokenizer_path = '/var/lib/postgresql/tokenizer1.json',
+            normalize_mappings = '{".": "x", "/": "Z", "\\\\": "X", "\`": "C"}'
+          );
+      `);
+    })
+    .then(() => {
+      return pool.query(`
+        CREATE INDEX IF NOT EXISTS my_ibpe_index_2 ON sentences
+          USING ibpe (text_without_sep) with (
+            tokenizer_path = '/var/lib/postgresql/tokenizer2.json',
+            normalize_mappings = '{".": "x", "/": "Z", "\\\\": "X", "\`": "C"}'
+          );
       `);
     })
     .then(() => {

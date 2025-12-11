@@ -6,6 +6,7 @@ import jsdom from "jsdom";
 import { promisify } from "util";
 
 import { hangul_to_yale } from "../components/YaleToHangul.mjs";
+import { insert_into_db } from "./insert_into_db.js";
 import {
   parse_year_string,
   year_and_bookname_from_filename,
@@ -187,7 +188,7 @@ function add_file(file, xml) {
           non_chinese_sentence_count += 1;
         }
 
-        const text_without_sep = text.replace(/[ .^]/g, "");
+        const text_without_sep = text.replace(/[ .^@]/g, "");
         sentences.push({
           filename: filename,
           text: text,
@@ -224,7 +225,7 @@ function parse_xml(parser, data) {
   return parser.parseFromString(data, "text/xml");
 }
 
-export async function insert_documents(insert_fn, batch_size, slice) {
+export async function insert_documents(pool, batch_size, slice) {
   const dom = new jsdom.JSDOM("");
   const parser = new dom.window.DOMParser();
 
@@ -237,9 +238,9 @@ export async function insert_documents(insert_fn, batch_size, slice) {
       break;
     }
 
-    if (i % batch_size === 0) {
-      await Promise.all(promises);
-      promises = [];
+    if (promises.length >= batch_size) {
+      const finished = await Promise.any(promises);
+      promises = promises.filter((prom) => prom.id !== finished);
     }
 
     const pushTask = promisify(fs.readFile)(file, "utf8")
@@ -248,14 +249,18 @@ export async function insert_documents(insert_fn, batch_size, slice) {
       })
       .then(async (xml) => {
         const [book_details, sentences] = add_file(file, xml);
-        return insert_fn(i, book_details, sentences);
+        return insert_into_db(pool, book_details, sentences);
       })
       .then(() => {
         console.log(i, "DONE", file);
+        return i;
       })
       .catch((err) => {
         console.error(i, "ERROR", file, err.code, err.stack);
+        return i;
       });
+
+    pushTask.id = i;
 
     promises.push(pushTask);
   }

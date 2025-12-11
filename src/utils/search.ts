@@ -3,13 +3,6 @@ import { PoolClient } from "pg";
 
 import { searchTerm2Regex } from "@/components/Regex.mjs";
 
-import type { NgramMaps } from "./load_ngram_index";
-import { find_candidate_ids } from "./regex_index";
-
-const TRIGRAM_THRESHOLD: number = parseInt(
-  process.env.TRIGRAM_THRESHOLD ?? "5000",
-);
-
 export type Sentence = {
   id: number;
   filename: string;
@@ -51,13 +44,14 @@ export async function makeCorpusQuery(
   ignoreSep: boolean,
   offset: number,
   count: number,
-  ngramIndex: NgramMaps,
 ): Promise<SentenceRow[] | null> {
   if (term === "") {
     return null;
   }
 
   const regex = searchTerm2Regex(term, ignoreSep);
+
+  console.log("regex: ", regex);
 
   let filterDoc = "";
   if (doc !== "") {
@@ -77,127 +71,56 @@ export async function makeCorpusQuery(
 
   const textFieldName = ignoreSep ? "st.text_without_sep" : "st.text";
 
-  let candIds;
-  try {
-    candIds = await getCandidateIds(regex, ignoreSep, ngramIndex);
-    if (candIds === null) {
-      return null;
-    }
-
-    console.log(`Got ${candIds.size} candidate IDs for term "${term}".`);
-  } catch (_) {
-    candIds = null;
-  }
-
-  if (candIds !== null && candIds.size < TRIGRAM_THRESHOLD) {
-    if (candIds.size === 0) {
-      return null;
-    }
-
-    const queryString = format(
-      `
-        WITH tmp_ids (id) AS (
-          VALUES %L
-        ),
-        results AS (
-          SELECT st.*
-            FROM sentences st
-              JOIN tmp_ids t ON st.id = t.id
-            WHERE ${textFieldName} ~ %L ${filterDoc} ${filterLang}
-            ORDER BY
-              st.year_sort ASC,
-              st.filename::bytea ASC,
-              st.number_in_book ASC
-            OFFSET %L
-            LIMIT %L
-        ),
-        context AS (
-          SELECT 
-            r.id,
-            r.filename,
-            r.number_in_book,
-            r.year_sort,
-            array_agg(
-              to_jsonb(st) || jsonb_build_object(
-                'is_target', (r.id = st.id)
-              )
-            ) AS sentences
-          FROM sentences st
-            JOIN results r 
-              ON st.filename = r.filename
-              AND st.number_in_book BETWEEN
-                  r.number_in_book-5 AND r.number_in_book+5
-            GROUP BY r.id, r.filename, r.number_in_book, r.year_sort
-        )
-        SELECT b.*, c.sentences, c.number_in_book
-        FROM context c
-        JOIN books b ON c.filename = b.filename
+  const queryString = format(
+    `
+      WITH results AS (
+      SELECT st.*
+        FROM sentences st
+        WHERE ${textFieldName} ~ %L
+              ${filterDoc} ${filterLang}
         ORDER BY
-          c.year_sort ASC,
-          c.filename::bytea ASC,
-          c.number_in_book ASC
+          st.year_sort ASC,
+          st.filename::bytea ASC,
+          st.number_in_book ASC
+        OFFSET %L
+        LIMIT %L
+      ),
+      context AS (
+        SELECT 
+          r.id,
+          r.filename,
+          r.number_in_book,
+          r.year_sort,
+          array_agg(
+            to_jsonb(st) || jsonb_build_object(
+              'is_target', (r.id = st.id)
+            )
+          ) AS sentences
+        FROM sentences st
+          JOIN results r 
+            ON st.filename = r.filename
+            AND st.number_in_book BETWEEN
+                r.number_in_book-5 AND r.number_in_book+5
+          GROUP BY r.id, r.filename, r.number_in_book, r.year_sort
+      )
+      SELECT b.*, c.sentences, c.number_in_book
+      FROM context c
+      JOIN books b ON c.filename = b.filename
+      ORDER BY
+        c.year_sort ASC,
+        c.filename::bytea ASC,
+        c.number_in_book ASC
       `,
-      Array.from(candIds).map((id) => [id]),
-      [regex.source],
-      offset,
-      count,
-    );
+    [regex.source],
+    offset,
+    count,
+  );
 
-    const result = await client.query(queryString);
+  console.log("Query string = ", queryString);
 
-    return result.rows;
-  } else {
-    console.log(`Falling back to regular psql.`);
+  const results = await client.query(queryString);
 
-    const queryString = format(
-      `
-        WITH results AS (
-        SELECT st.*
-          FROM sentences st
-          WHERE ${textFieldName} ~ %L
-                ${filterDoc} ${filterLang}
-          ORDER BY
-            st.year_sort ASC,
-            st.filename::bytea ASC,
-            st.number_in_book ASC
-          OFFSET %L
-          LIMIT %L
-        ),
-        context AS (
-          SELECT 
-            r.id,
-            r.filename,
-            r.number_in_book,
-            r.year_sort,
-            array_agg(
-              to_jsonb(st) || jsonb_build_object(
-                'is_target', (r.id = st.id)
-              )
-            ) AS sentences
-          FROM sentences st
-            JOIN results r 
-              ON st.filename = r.filename
-              AND st.number_in_book BETWEEN
-                  r.number_in_book-5 AND r.number_in_book+5
-            GROUP BY r.id, r.filename, r.number_in_book, r.year_sort
-        )
-        SELECT b.*, c.sentences, c.number_in_book
-        FROM context c
-        JOIN books b ON c.filename = b.filename
-        ORDER BY
-          c.year_sort ASC,
-          c.filename::bytea ASC,
-          c.number_in_book ASC
-        `,
-      [regex.source],
-      offset,
-      count,
-    );
-
-    const results = await client.query(queryString);
-
-    return results.rows;
-  }
+  return results.rows;
 }
 
 export async function makeCorpusStatsQuery(
@@ -205,7 +128,6 @@ export async function makeCorpusStatsQuery(
   doc: string,
   excludeModern: boolean,
   ignoreSep: boolean,
-  ngramIndex: NgramMaps,
 ) {
   if (term === "") {
     return null;
@@ -231,79 +153,16 @@ export async function makeCorpusStatsQuery(
       `;
   }
 
-  let queryString = null;
-
-  let candIds;
-  try {
-    candIds = await getCandidateIds(regex, ignoreSep, ngramIndex);
-    if (candIds === null) {
-      return null;
-    }
-
-    console.log(`Got ${candIds.size} candidate IDs for term "${term}".`);
-  } catch (_) {
-    candIds = null;
-  }
-
-  if (candIds !== null && candIds.size < TRIGRAM_THRESHOLD) {
-    const candIds = await getCandidateIds(regex, ignoreSep, ngramIndex);
-    if (candIds === null) {
-      return null;
-    }
-
-    if (candIds.size === 0) {
-      return null;
-    }
-
-    queryString = format(
-      `
-        WITH tmp_ids (id) AS (
-          VALUES %L
-        )
-        SELECT 
-            st.decade_sort AS period, 
-            CAST(COUNT(DISTINCT st.id) AS INTEGER) AS num_hits
-          FROM sentences st JOIN tmp_ids t ON st.id = t.id
-          WHERE ${textFieldName} ~ %L
-                ${filterDoc} ${filterLang}
-          GROUP BY st.decade_sort
-      `,
-      Array.from(candIds).map((id) => [id]),
-      [regex.source],
-    );
-  } else {
-    console.log(`Falling back to regular psql.`);
-
-    queryString = format(
-      `
-        SELECT 
-            st.decade_sort AS period, 
-            CAST(COUNT(DISTINCT st.id) AS INTEGER) AS num_hits
-          FROM sentences st
-          WHERE ${textFieldName} ~ %L
-                ${filterDoc} ${filterLang}
-          GROUP BY st.decade_sort
-      `,
-      [regex.source],
-    );
-  }
-
-  return queryString;
-}
-
-async function getCandidateIds(
-  regex: RegExp,
-  ignoreSep: boolean,
-  ngramIndex: NgramMaps,
-): Promise<Set<number> | null> {
-  if (regex.source === "" || regex.source === "(?:)") {
-    return null; // No valid regex to search for
-  }
-
-  const index = [
-    ngramIndex.common,
-    ignoreSep ? ngramIndex.nosep : ngramIndex.sep,
-  ];
-
-  return find_candidate_ids(regex, index, process.env.SEARCH_VERBOSE === "1");
+  return format(
+    `
+      SELECT 
+          st.decade_sort AS period, 
+          CAST(COUNT(DISTINCT st.id) AS INTEGER) AS num_hits
+        FROM sentences st
+        WHERE ${textFieldName} ~ %L
+              ${filterDoc} ${filterLang}
+        GROUP BY st.decade_sort
+    `,
+    [regex.source],
+  );
 }

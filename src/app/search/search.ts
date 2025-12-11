@@ -3,7 +3,7 @@
 import escapeStringRegexp from "escape-string-regexp";
 import { format } from "node-pg-format";
 
-import { getNgramIndex, getPool } from "@/app/db";
+import { getPool } from "@/app/db";
 import {
   Sentence,
   makeCorpusQuery,
@@ -65,7 +65,6 @@ export async function search(
       query.ignoreSep,
       offset,
       PAGE_N,
-      await getNgramIndex(),
     );
 
     const elapsed = new Date().getTime() - beginTime.getTime();
@@ -144,7 +143,6 @@ export async function getStats(query: SearchQuery): Promise<StatsResult> {
       query.doc,
       query.excludeModern,
       query.ignoreSep,
-      await getNgramIndex(),
     );
 
     if (queryString === null) {
@@ -154,6 +152,8 @@ export async function getStats(query: SearchQuery): Promise<StatsResult> {
         histogram: [],
       };
     }
+
+    console.log("Stats query= ", queryString);
 
     const results = await client.query(queryString);
 
