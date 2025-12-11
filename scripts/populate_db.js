@@ -37,9 +37,12 @@ async function populate_db(database_name, doc_cnt) {
     });
 
   // load extension
-  await pool.query("create extension corpussearch;").catch((err) => {
-    console.error(err);
-  });
+  await pool
+    .query("drop extension corpussearch cascade;")
+    .then(() => pool.query("create extension corpussearch;"))
+    .catch((err) => {
+      console.error(err);
+    });
 
   return pool
     .query("DROP TABLE IF EXISTS books, sentences CASCADE;")
