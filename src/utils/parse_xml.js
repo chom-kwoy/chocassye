@@ -130,6 +130,7 @@ function add_file(file, xml) {
 
   // iterate over sentences
   let index = 0;
+  let last_page = null;
   let global_page = null;
   let cur_section = null;
   let non_chinese_sentence_count = 0;
@@ -165,12 +166,15 @@ function add_file(file, xml) {
 
         let attr = sentence.attributes;
         let type = attr.type === undefined ? null : uni(attr.type.value.trim());
-        if (sentence.tagName === "title" || type === "title") {
-          cur_section = uni(sentence.textContent.trim());
-        }
-
         let page =
           attr.page === undefined ? global_page : uni(attr.page.value.trim());
+        if (sentence.tagName === "title" || type === "title") {
+          if (!is_monotonic(last_page, page)) {
+            cur_section = uni(sentence.textContent.trim());
+          }
+        }
+        last_page = page;
+
         let lang = attr.lang === undefined ? null : uni(attr.lang.value.trim());
         let number_in_page = null;
         if (attr.n !== undefined) {
@@ -218,6 +222,34 @@ function add_file(file, xml) {
   return [book_details, sentences];
 }
 
+function is_monotonic(prev_page, cur_page) {
+  if (prev_page === null) {
+    return false;
+  }
+  prev_page = prev_page.split("-");
+  prev_page = prev_page[prev_page.length - 1];
+  cur_page = cur_page.split("-");
+  cur_page = cur_page[0];
+  const prev_num = prev_page.match(/\d+/g);
+  const cur_num = cur_page.match(/\d+/g);
+  if (prev_num === null) {
+    return true;
+  }
+  const pnum = parseInt(prev_num, 10);
+  const cnum = parseInt(cur_num, 10);
+  if (pnum === cnum || pnum + 1 === cnum) {
+    return true;
+  }
+  if (cnum !== 1) {
+    console.warn(
+      "WARNING: found discontinuous page number",
+      prev_page,
+      cur_page,
+    );
+  }
+  return cnum !== 1;
+}
+
 function parse_xml(parser, data) {
   data = data.replace(/^\uFEFF/, "").replace(/[^\0-~]/g, function (ch) {
     return "{{{" + ("0000" + ch.charCodeAt().toString(16)).slice(-5) + "}}}";
@@ -241,6 +273,12 @@ export async function insert_documents(pool, batch_size, slice) {
     if (promises.length >= batch_size) {
       const finished = await Promise.any(promises);
       promises = promises.filter((prom) => prom.id !== finished);
+    }
+
+    if (process.env.FILE) {
+      if (!file.includes(process.env.FILE)) {
+        continue;
+      }
     }
 
     const pushTask = promisify(fs.readFile)(file, "utf8")

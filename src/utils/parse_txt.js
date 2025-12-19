@@ -246,6 +246,12 @@ export function insert_txt_documents(pool, batch_size, doc_cnt) {
         break;
       }
 
+      if (process.env.FILE) {
+        if (!file.includes(process.env.FILE)) {
+          continue;
+        }
+      }
+
       const pushTask = promisify(fs.readFile)(file, "utf8")
         .then(async (text) => {
           text = text.replace(/^\uFEFF/, ""); // remove BOM
