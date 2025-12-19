@@ -6,6 +6,7 @@ import { searchTerm2Regex } from "@/components/Regex.mjs";
 export type Sentence = {
   id: number;
   filename: string;
+  section: string;
   text: string;
   text_without_sep: string;
   text_with_tone: string | null;
@@ -16,7 +17,6 @@ export type Sentence = {
   orig_tag: string;
   number_in_page: string;
   number_in_book: number;
-  hasimages: boolean;
   year_sort: number;
   decade_sort: number;
   is_target: boolean;

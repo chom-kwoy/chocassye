@@ -6,7 +6,7 @@ import jsdom from "jsdom";
 import { promisify } from "util";
 
 import { hangul_to_yale } from "../components/YaleToHangul.mjs";
-import { insert_into_db } from "./insert_into_db.js";
+import { insert_into_db } from "./insert_into_db.ts";
 import {
   parse_year_string,
   year_and_bookname_from_filename,
@@ -91,11 +91,6 @@ function add_file(file, xml) {
 
   let doc = xml.documentElement;
 
-  // check if doc has hasImages attribute
-  let hasImages =
-    doc.attributes.hasImages !== undefined &&
-    doc.attributes.hasImages.value === "true";
-
   if (year_string === null) {
     year_string = find_year(doc).normalize("NFKC");
   }
@@ -136,6 +131,7 @@ function add_file(file, xml) {
   // iterate over sentences
   let index = 0;
   let global_page = null;
+  let cur_section = null;
   let non_chinese_sentence_count = 0;
   for (let sentence of elements) {
     if (sentence.tagName === "mark") {
@@ -168,9 +164,13 @@ function add_file(file, xml) {
         text = hangul_to_yale(text, false);
 
         let attr = sentence.attributes;
+        let type = attr.type === undefined ? null : uni(attr.type.value.trim());
+        if (sentence.tagName === "title" || type === "title") {
+          cur_section = uni(sentence.textContent.trim());
+        }
+
         let page =
           attr.page === undefined ? global_page : uni(attr.page.value.trim());
-        let type = attr.type === undefined ? null : uni(attr.type.value.trim());
         let lang = attr.lang === undefined ? null : uni(attr.lang.value.trim());
         let number_in_page = null;
         if (attr.n !== undefined) {
@@ -191,6 +191,7 @@ function add_file(file, xml) {
         const text_without_sep = text.replace(/[ .^@]/g, "");
         sentences.push({
           filename: filename,
+          section: cur_section,
           text: text,
           text_without_sep: text_without_sep,
           text_with_tone: text_with_tone,
@@ -201,7 +202,6 @@ function add_file(file, xml) {
           orig_tag: sentence.tagName,
           number_in_page: number_in_page,
           number_in_book: index,
-          hasImages: hasImages,
           year_sort: book_details.year_sort,
           decade_sort: book_details.decade_sort,
         });

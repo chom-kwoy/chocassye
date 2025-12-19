@@ -1,11 +1,9 @@
 "use strict";
 
-import fs from "fs";
 import pg from "pg";
 
-import { insert_into_db } from "../src/utils/insert_into_db.js";
+import { insert_txt_documents } from "../src/utils/parse_txt.js";
 import { insert_documents } from "../src/utils/parse_xml.js";
-import { insert_txt_documents } from "./add_txt_to_db";
 
 async function populate_db(database_name, doc_cnt) {
   const { Pool } = pg;
@@ -68,18 +66,18 @@ async function populate_db(database_name, doc_cnt) {
         CREATE TABLE sentences (
           id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
           filename TEXT,
+          section TEXT,
           text TEXT,
           text_without_sep TEXT,
           text_with_tone TEXT,
-          html TEXT, 
-          type TEXT, 
-          lang TEXT, 
-          page TEXT, 
-          orig_tag TEXT, 
-          number_in_page TEXT, 
-          number_in_book INTEGER, 
-          hasImages BOOLEAN, 
-          year_sort INTEGER, 
+          html TEXT,
+          type TEXT,
+          lang TEXT,
+          page TEXT,
+          orig_tag TEXT,
+          number_in_page TEXT,
+          number_in_book INTEGER,
+          year_sort INTEGER,
           decade_sort INTEGER
         );
       `;

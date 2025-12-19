@@ -8,16 +8,14 @@ import { promisify } from "util";
 import {
   hangul_to_yale,
   normalize_string,
-} from "../src/components/YaleToHangul.mjs";
-import { insert_into_db } from "../src/utils/insert_into_db.js";
+} from "../components/YaleToHangul.mjs";
+import { insert_into_db } from "./insert_into_db.ts";
 import {
   parse_year_string,
   year_and_bookname_from_filename,
-} from "../src/utils/parse_utils.js";
+} from "./parse_utils.js";
 
 function parse_format_1(file, lines) {
-  const hasImages = false;
-
   let { filename, year_string } = year_and_bookname_from_filename(file);
 
   let { year, year_start, year_end } = parse_year_string(year_string);
@@ -45,6 +43,8 @@ function parse_format_1(file, lines) {
   let index = 0;
   let number_in_page = 0;
 
+  let cur_section = null;
+
   for (let i = 1; i < lines.length; i++) {
     let line = lines[i].trim();
     if (line === "") {
@@ -62,7 +62,7 @@ function parse_format_1(file, lines) {
 
     const type = line.includes("[head]") ? "title" : "main";
 
-    const text = hangul_to_yale(line)
+    let text = line
       .replaceAll("[note]", "[")
       .replaceAll("[/note]", "]")
       .replaceAll("[head]", "")
@@ -71,10 +71,16 @@ function parse_format_1(file, lines) {
       .replaceAll("[/add]", "")
       .trim();
 
+    if (type === "title") {
+      cur_section = text;
+    }
+
+    text = hangul_to_yale(text);
     const text_without_sep = text.replace(/[ .^@]/g, "");
 
     sentences.push({
       filename: filename,
+      section: cur_section,
       text: text,
       text_without_sep: text_without_sep,
       text_with_tone: null,
@@ -85,7 +91,6 @@ function parse_format_1(file, lines) {
       orig_tag: "sent",
       number_in_page: number_in_page,
       number_in_book: index,
-      hasImages: hasImages,
       year_sort: book_details.year_sort,
       decade_sort: book_details.decade_sort,
     });
@@ -101,8 +106,6 @@ function parse_format_1(file, lines) {
 }
 
 function parse_format_2(file, lines) {
-  const hasImages = false;
-
   file = file.normalize("NFKC");
   let filename = path.parse(file).name;
 
@@ -135,6 +138,7 @@ function parse_format_2(file, lines) {
   let pageno = "";
   let index = 0;
   let number_in_page = 0;
+  let cur_section = null;
 
   const xml_tag_re = /<[^>]*?>/g;
   const page_tag_re = /<page id="([^"]*)"\/>/;
@@ -173,6 +177,7 @@ function parse_format_2(file, lines) {
       if (sent.includes("[title]")) {
         type = "title";
         sent = sent.replaceAll("[title]", "");
+        cur_section = sent;
       }
 
       const text = hangul_to_yale(sent);
@@ -180,6 +185,7 @@ function parse_format_2(file, lines) {
 
       sentences.push({
         filename: filename,
+        section: cur_section,
         text: text,
         text_without_sep: text_without_sep,
         text_with_tone: null,
@@ -190,7 +196,6 @@ function parse_format_2(file, lines) {
         orig_tag: "sent",
         number_in_page: number_in_page,
         number_in_book: index,
-        hasImages: hasImages,
         year_sort: book_details.year_sort,
         decade_sort: book_details.decade_sort,
       });
