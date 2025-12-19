@@ -168,12 +168,29 @@ function add_file(file, xml) {
         let type = attr.type === undefined ? null : uni(attr.type.value.trim());
         let page =
           attr.page === undefined ? global_page : uni(attr.page.value.trim());
+        if (page === null) {
+          page = attr.n === undefined ? null : uni(attr.n.value.trim());
+        }
+        if (page === null) {
+          console.warn("WARNING: page is null", file);
+        }
         if (sentence.tagName === "title" || type === "title") {
           if (!is_monotonic(last_page, page)) {
             cur_section = uni(sentence.textContent.trim());
           }
         }
-        last_page = page;
+
+        let page_start = null;
+        let page_end = null;
+        if (page !== null) {
+          let cur_pages = page.replace(/(?<!\d)0+/g, "").split("-");
+          let splits = cur_pages[0].split(/(\d+)/);
+          let prefix = splits[0];
+          cur_pages[0] = splits.slice(1).join("");
+          page_start = prefix + cur_pages[0];
+          page_end =
+            cur_pages.length === 1 ? page_start : prefix + cur_pages[1];
+        }
 
         let lang = attr.lang === undefined ? null : uni(attr.lang.value.trim());
         let number_in_page = null;
@@ -202,7 +219,8 @@ function add_file(file, xml) {
           html: html,
           type: type,
           lang: lang,
-          page: page,
+          page_start: page_start,
+          page_end: page_end,
           orig_tag: sentence.tagName,
           number_in_page: number_in_page,
           number_in_book: index,

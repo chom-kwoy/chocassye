@@ -27,7 +27,8 @@ export type InsertSentence = {
   html: string;
   type: string;
   lang: string;
-  page: string;
+  page_start: string;
+  page_end: string;
   orig_tag: string;
   number_in_page: string;
   number_in_book: number;
@@ -74,10 +75,10 @@ export async function insert_into_db(
       `
         INSERT INTO sentences (
           filename, section, text, text_without_sep, text_with_tone, html,
-          type, lang, page, orig_tag, number_in_page, number_in_book,
-          year_sort, decade_sort
+          type, lang, page_start, page_end, orig_tag, 
+          number_in_page, number_in_book, year_sort, decade_sort
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
         ) RETURNING id;
       `,
       [
@@ -89,7 +90,8 @@ export async function insert_into_db(
         sentence.html,
         sentence.type,
         sentence.lang,
-        sentence.page,
+        sentence.page_start,
+        sentence.page_end,
         sentence.orig_tag,
         sentence.number_in_page,
         sentence.number_in_book,

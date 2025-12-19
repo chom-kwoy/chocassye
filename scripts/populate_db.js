@@ -43,7 +43,7 @@ async function populate_db(database_name, doc_cnt) {
     });
 
   return pool
-    .query("DROP TABLE IF EXISTS books, sentences CASCADE;")
+    .query("DROP TABLE IF EXISTS books, sentences, images CASCADE;")
     .then(() => {
       console.log("Dropped tables.");
       const create_books = `
@@ -73,7 +73,8 @@ async function populate_db(database_name, doc_cnt) {
           html TEXT,
           type TEXT,
           lang TEXT,
-          page TEXT,
+          page_start TEXT,
+          page_end TEXT,
           orig_tag TEXT,
           number_in_page TEXT,
           number_in_book INTEGER,
@@ -81,9 +82,20 @@ async function populate_db(database_name, doc_cnt) {
           decade_sort INTEGER
         );
       `;
+      const create_images = `
+        CREATE TABLE images (
+          id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+          book_name TEXT,
+          edition TEXT,
+          section TEXT,
+          page TEXT,
+          url TEXT
+        );
+      `;
       return Promise.all([
         pool.query(create_books),
         pool.query(create_sentences),
+        pool.query(create_images),
       ]);
     })
     .then(async () => {
