@@ -275,7 +275,7 @@ function parse_xml(parser, data) {
   return parser.parseFromString(data, "text/xml");
 }
 
-export async function insert_documents(pool, batch_size, slice) {
+export async function insert_xml_documents(pool, batch_size, slice) {
   const dom = new jsdom.JSDOM("");
   const parser = new dom.window.DOMParser();
 

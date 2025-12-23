@@ -33,7 +33,7 @@
   "Exclude Chinese": "Exclude Chinese",
   "Source": "Source",
   "Attributions": "Attributions",
-  "Image for page": "Image for {page}",
+  "Image for page": "Image for {page} (edition: {edition})",
   "Toggle Gugyeol Input": "Toggle Gugyeol Input",
   "Results per page": "Results per page",
   "Unknown year": "-",

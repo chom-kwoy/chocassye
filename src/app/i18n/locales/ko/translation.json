@@ -48,7 +48,7 @@
   "Exclude Chinese": "한문 숨기기",
   "Source": "출처 서지정보",
   "Attributions": "입력 및 교정",
-  "Image for page": "{page} 원문사진",
+  "Image for page": "{page} 원문사진 (판본: {edition})",
   "Toggle Gugyeol Input": "구결자 입력기",
   "Results per page": "개씩 보기",
   "Unknown year": "연도미상",

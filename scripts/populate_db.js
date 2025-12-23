@@ -3,7 +3,7 @@
 import pg from "pg";
 
 import { insert_txt_documents } from "../src/utils/parse_txt.js";
-import { insert_documents } from "../src/utils/parse_xml.js";
+import { insert_xml_documents } from "../src/utils/parse_xml.js";
 
 async function populate_db(database_name, doc_cnt) {
   const { Pool } = pg;
@@ -102,7 +102,7 @@ async function populate_db(database_name, doc_cnt) {
       const BATCH_SIZE = process.env.BATCH ? parseInt(process.env.BATCH) : 256;
       console.log("Batch size:", BATCH_SIZE);
 
-      await insert_documents(pool, BATCH_SIZE, doc_cnt);
+      await insert_xml_documents(pool, BATCH_SIZE, doc_cnt);
       await insert_txt_documents(pool, BATCH_SIZE, doc_cnt);
     })
     .then(() => {

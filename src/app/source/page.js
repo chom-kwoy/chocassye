@@ -3,7 +3,7 @@ import React from "react";
 import { getTranslation } from "@/components/detectLanguage";
 
 import { fetchSource } from "./fetchSource";
-import { SourcePage } from "./sourcePage";
+import { SourcePage } from "./sourcePage.tsx";
 
 export async function generateMetadata({ searchParams }) {
   const params = await searchParams;
@@ -37,7 +37,7 @@ export default async function Source({ searchParams }) {
       <SourcePage
         bookName={bookName}
         numberInSource={numberInSource}
-        result={sourceData}
+        result={sourceData.data}
         highlightWord={highlightWord}
         ignoreSep={ignoreSep}
         excludeChinese={excludeChinese}

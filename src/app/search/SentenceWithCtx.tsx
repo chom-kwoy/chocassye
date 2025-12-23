@@ -4,27 +4,23 @@ import {
   IconButton,
   Paper,
   Snackbar,
-  Stack,
   Tooltip,
   useTheme,
 } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import { ThemeProvider, styled } from "@mui/material/styles";
 import { Interweave } from "interweave";
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-import { ImageTooltip } from "@/app/search/ImageTooltip";
 import { Book, SentenceWithContext } from "@/app/search/search";
 import { darkTheme, lightTheme } from "@/app/themes";
 import { highlight } from "@/components/Highlight";
+import { ImagePreviewLink } from "@/components/ImageTooltip";
 import { ThemeContext } from "@/components/ThemeContext";
 import { useTranslation } from "@/components/TranslationProvider";
 import { yale_to_hangul } from "@/components/YaleToHangul.mjs";
-import { IMAGE_BASE_URL } from "@/components/config";
 import { Sentence } from "@/utils/search";
-import useDimensions from "@/utils/useDimensions";
 
 function useOutsideAlerter<T extends HTMLElement>(
   ref: React.RefObject<T | null>,
@@ -77,9 +73,9 @@ export function SentenceWithCtx(props: {
   const [copyNotifOpen, setCopyNotifOpen] = React.useState(false);
 
   const makeWiktionaryCitation = React.useCallback(() => {
+    const mainSent = props.sentenceWithCtx.mainSentence;
     const text = yale_to_hangul(
-      props.sentenceWithCtx.mainSentence.text_with_tone ??
-        props.sentenceWithCtx.mainSentence.text,
+      mainSent.text_with_tone ?? mainSent.text,
     ) as string;
     const lng = props.book.year > 1600 ? "ko-ear" : "okm";
     const items = [
@@ -87,10 +83,14 @@ export function SentenceWithCtx(props: {
       `${lng}`,
       `title=ko:${props.book.name}`,
       `year=${props.book.year_string}`,
-      `page=${props.sentenceWithCtx.mainSentence.page}`,
-      `passage=^${text}.`,
-      `t=<enter translation here>`,
     ];
+    if (mainSent.page_start == mainSent.page_end) {
+      items.push(`page=${mainSent.page_start}`);
+    } else {
+      items.push(`pages=${mainSent.page_start}-${mainSent.page_end}`);
+    }
+    items.push(`passage=^${text}.`);
+    items.push(`t=<enter translation here>`);
 
     const prevSentence =
       props.sentenceWithCtx.contextBefore[
@@ -264,86 +264,6 @@ export function SentenceWithCtx(props: {
   );
 }
 
-const BLUR_DATA_URL = // Blurred image of a page
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAARCAYAAADkIz3lAAAA" +
-  "CXBIWXMAAA7EAAAOxAGVKw4bAAABsklEQVQokY3SvW4TQRTF8f/cmdmdXa+TeIkdK1YIUh" +
-  "6AgtemTUUBJUiIAgqQQEIoEEBK4u/12jsfFMsD5NY/nXOKq1JKiUecAdgsvqNEEFEoUYjS" +
-  "zH99ARIhBHzoeria32KsRWmN1pr95oHVn88oY1HG0nVtD19fvyQvC3TmiMGT/AFXHVEUJa" +
-  "IFkdjDD5++cnE+wrqCgGHdHKhHnhfPp/z4+Ztmu+yhtRnL5YZKMqLkrNYNSmlevXmL0cJ4" +
-  "5HpY5pqz2hFtxvbQMRyUzKYTijwjJc++3SAA5XHNpo0E31EPM+qTiu12i0ikaRrmi//Vzy" +
-  "YF94sOHwJ1lfN3vmO12fFtcU/XeSonfeLBR6rhCbOLS7LMcXN7x/jIMR2VpK5Fi/SJ0XfY" +
-  "wQBEo1WHyx1aoCwLTsdPiOge6szh/QFHTm41xwPFw2KB6JrZ+RlN6/tqrwzJt6yXc7wS7p" +
-  "YN8/WO8emIoiyxmelhKJ5iRleEENHGcnkxZTisGAxKrLWICCqllN6/u2bfttzffEQkIWKQ" +
-  "5FEIAUPu8n7jeDzhsFsS7iKiLXleYrRASqQY8b7rEx/zj/8AKXG2WTJjYXMAAAAASUVORK" +
-  "5CYII=";
-
-function PageImagePreview(props: { page: string; imageURL: string }) {
-  const { t } = useTranslation();
-
-  const ref = React.useRef<HTMLDivElement | null>(null);
-  const { width } = useDimensions(ref);
-
-  return (
-    <Stack ref={ref} direction="column" spacing={0}>
-      <Image
-        src={props.imageURL}
-        alt={t("Image for page", { page: props.page })}
-        style={{ objectFit: "contain" }}
-        placeholder="blur"
-        blurDataURL={BLUR_DATA_URL}
-        width={width}
-        height={width * 1.4}
-      />
-      <span>{t("Image for page", { page: props.page })}</span>
-    </Stack>
-  );
-}
-
-function ImagePreviewLink({
-  sentence,
-  bookName,
-  sourceTextColor,
-}: {
-  sentence: Sentence;
-  bookName: string;
-  sourceTextColor: "#757575" | "#bdbdbd";
-}) {
-  if (sentence.hasimages && sentence.page !== "") {
-    return (
-      <>
-        {sentence.page.split("-").map((page, i) => {
-          const imageURL = `${IMAGE_BASE_URL}/${bookName}/${page}.jpg`;
-          return (
-            <ImageTooltip
-              title={<PageImagePreview page={page} imageURL={imageURL} />}
-              placement="right"
-              key={i}
-            >
-              <span>
-                <a
-                  className="pageNum"
-                  style={{
-                    color: sourceTextColor,
-                    textDecoration: `underline solid ${sourceTextColor}`,
-                  }}
-                  href={imageURL}
-                  target="blank"
-                  key={i}
-                >
-                  {page}
-                </a>
-                {i < sentence.page.split("-").length - 1 ? "-" : null}
-              </span>
-            </ImageTooltip>
-          );
-        })}
-      </>
-    );
-  } else {
-    return <>{sentence.page !== "" ? sentence.page : null}</>;
-  }
-}
-
 function SentenceAndPage(props: {
   sentence: Sentence;
   book: Book;
@@ -395,11 +315,13 @@ function SentenceAndPage(props: {
               }
               style={{ textDecoration: `underline dotted ${sourceTextColor}` }}
             >
-              {sentence.page === null ? props.book.name : `${props.book.name}:`}
+              {props.book.name}
             </Link>
+            {sentence.page_start === null ? "" : ":"}
             <ImagePreviewLink
-              sentence={sentence}
-              bookName={props.book.name}
+              page_start={sentence.page_start}
+              page_end={sentence.page_end}
+              scan_urls={sentence.scan_urls}
               sourceTextColor={sourceTextColor}
             />
             ]

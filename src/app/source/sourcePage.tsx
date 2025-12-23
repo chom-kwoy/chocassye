@@ -15,7 +15,6 @@ import {
   TableBody,
   TableContainer,
   TableRow,
-  Tooltip,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -25,10 +24,11 @@ import { Interweave } from "interweave";
 import { useRouter } from "next/navigation";
 import React from "react";
 
+import { Sentence, SourceData } from "@/app/source/fetchSource";
 import { highlight } from "@/components/Highlight";
+import { ImagePreviewLink } from "@/components/ImageTooltip";
 import { useTranslation } from "@/components/TranslationProvider";
 import { StyledTableCell, StyledTableRow } from "@/components/client_utils";
-import { IMAGE_BASE_URL } from "@/components/config";
 
 const NonAlternatingTableRow = styled(TableRow)(({}) => ({
   // hide last border
@@ -38,41 +38,21 @@ const NonAlternatingTableRow = styled(TableRow)(({}) => ({
 }));
 const allowList = ["mark", "abbr", "span"];
 
-function Sentence(props) {
-  const { t } = useTranslation();
-  const bookname = props.bookname;
-  const sentence = props.sentence;
-  const highlight_term = props.highlight_term;
-  const ignoreSep = props.ignoreSep;
+function SentenceView({
+  sentence,
+  highlight_term,
+  ignoreSep,
+}: {
+  sentence: Sentence;
+  highlight_term: string;
+  ignoreSep: boolean;
+}) {
   const text = sentence.html ?? sentence.text;
   const html = highlight(text, highlight_term, null, false, ignoreSep);
 
   const theme = useTheme();
   const sourceTextColor =
     theme.palette.mode === "light" ? grey["600"] : grey["400"];
-
-  let displayPage = sentence.page;
-  if (sentence.hasimages && sentence.page !== "") {
-    displayPage = sentence.page.split("-").map((page, i) => (
-      <Tooltip key={i} title={t("Image for page", { page: page })}>
-        <span style={{ whiteSpace: "nowrap" }}>
-          <a
-            className="pageNum"
-            style={{
-              color: sourceTextColor,
-              textDecoration: "underline dotted",
-            }}
-            href={`${IMAGE_BASE_URL}/${bookname}/${page}.jpg`}
-            target="blank"
-            key={i}
-          >
-            {page}
-          </a>
-          {i < sentence.page.split("-").length - 1 ? "-" : null}
-        </span>
-      </Tooltip>
-    ));
-  }
 
   return (
     <StyledTableRow>
@@ -97,7 +77,14 @@ function Sentence(props) {
           className="pageNum"
           style={{ color: sourceTextColor, userSelect: "none" }}
         >
-          ({displayPage})
+          (
+          <ImagePreviewLink
+            page_start={sentence.page_start}
+            page_end={sentence.page_end}
+            scan_urls={sentence.scan_urls}
+            sourceTextColor={sourceTextColor}
+          />
+          )
         </span>
       </StyledTableCell>
     </StyledTableRow>
@@ -105,14 +92,13 @@ function Sentence(props) {
 }
 
 function makeSearchParams(
-  bookName,
-  numberInSource,
-  excludeChinese,
-  viewCount,
-  highlightWord,
-  ignoreSep,
+  bookName: string,
+  numberInSource: number,
+  excludeChinese: boolean,
+  viewCount: number,
+  highlightWord: string,
+  ignoreSep: boolean,
 ) {
-  console.log(highlightWord);
   const params = new URLSearchParams();
   params.set("name", bookName);
   if (numberInSource !== 0) {
@@ -133,12 +119,20 @@ function makeSearchParams(
   return params;
 }
 
-export function SourcePage(props) {
+export function SourcePage(props: {
+  bookName: string;
+  numberInSource: number;
+  excludeChinese: boolean;
+  viewCount: number;
+  highlightWord: string;
+  ignoreSep: boolean;
+  result: SourceData;
+}) {
   const router = useRouter();
 
   const { t } = useTranslation();
 
-  function setNumberInSource(n) {
+  function setNumberInSource(n: number) {
     const params = makeSearchParams(
       props.bookName,
       n,
@@ -150,12 +144,11 @@ export function SourcePage(props) {
     router.push(`/source?${params.toString()}`);
   }
 
-  function handleExcludeChineseChange(event) {
-    let excludeChinese = event.target.checked;
+  function handleExcludeChineseChange(checked: boolean) {
     const params = makeSearchParams(
       props.bookName,
       0,
-      excludeChinese,
+      checked,
       props.viewCount,
       props.highlightWord,
       props.ignoreSep,
@@ -163,51 +156,25 @@ export function SourcePage(props) {
     router.push(`/source?${params.toString()}`);
   }
 
-  function handleViewCountChange(event) {
-    let viewCount = event.target.value;
+  function handleViewCountChange(value: number) {
     const params = makeSearchParams(
       props.bookName,
       props.numberInSource,
       props.excludeChinese,
-      viewCount,
+      value,
       props.highlightWord,
       props.ignoreSep,
     );
     router.push(`/source?${params.toString()}`);
   }
 
-  if (props.result.data === null) {
-    return (
-      <Grid
-        container
-        spacing={{ xs: 0.5, sm: 1 }}
-        alignItems="center"
-        direction="row"
-      >
-        <Grid size={12}>
-          <Box>
-            <Typography
-              variant="h5"
-              component="span"
-              sx={{
-                fontWeight: 500,
-              }}
-            >
-              {props.bookName}
-            </Typography>
-          </Box>
-        </Grid>
-      </Grid>
-    );
-  }
-
-  let hl = props.highlightWord ?? "NULL";
+  const hl = props.highlightWord ?? "NULL";
 
   const PAGE = props.viewCount;
-  let pageCount = Math.ceil(props.result.data.count / PAGE);
+  const pageCount = Math.ceil(props.result.count / PAGE);
 
-  let n = props.numberInSource;
-  let page = Math.floor(n / PAGE);
+  const n = props.numberInSource;
+  const page = Math.floor(n / PAGE);
 
   return (
     <Grid
@@ -228,7 +195,7 @@ export function SourcePage(props) {
             {props.bookName}
           </Typography>
           &ensp;
-          <span>{props.result.data.year_string}</span>
+          <span>{props.result.year_string}</span>
         </Box>
       </Grid>
 
@@ -241,19 +208,17 @@ export function SourcePage(props) {
         >
           <Table size="small">
             <TableBody>
-              {props.result.data.bibliography === "" ? null : (
+              {props.result.bibliography === "" ? null : (
                 <StyledTableRow>
                   <StyledTableCell>
                     <Typography color={"textSecondary"}>
                       {t("Source")}
                     </Typography>
                   </StyledTableCell>
-                  <StyledTableCell>
-                    {props.result.data.bibliography}
-                  </StyledTableCell>
+                  <StyledTableCell>{props.result.bibliography}</StyledTableCell>
                 </StyledTableRow>
               )}
-              {props.result.data.attributions.length === 0 ? null : (
+              {props.result.attributions.length === 0 ? null : (
                 <StyledTableRow>
                   <StyledTableCell>
                     <Typography color={"textSecondary"}>
@@ -264,20 +229,18 @@ export function SourcePage(props) {
                     <TableContainer component={Paper} elevation={0}>
                       <Table size="small">
                         <TableBody>
-                          {props.result.data.attributions.map(
-                            (attribution, i) => (
-                              <NonAlternatingTableRow key={i}>
-                                <StyledTableCell>
-                                  <Typography color={"textSecondary"}>
-                                    {attribution.role}
-                                  </Typography>
-                                </StyledTableCell>
-                                <StyledTableCell>
-                                  {attribution.name}
-                                </StyledTableCell>
-                              </NonAlternatingTableRow>
-                            ),
-                          )}
+                          {props.result.attributions.map((attribution, i) => (
+                            <NonAlternatingTableRow key={i}>
+                              <StyledTableCell>
+                                <Typography color={"textSecondary"}>
+                                  {attribution.role}
+                                </Typography>
+                              </StyledTableCell>
+                              <StyledTableCell>
+                                {attribution.name}
+                              </StyledTableCell>
+                            </NonAlternatingTableRow>
+                          ))}
                         </TableBody>
                       </Table>
                     </TableContainer>
@@ -299,7 +262,10 @@ export function SourcePage(props) {
               </Typography>
             }
             checked={props.excludeChinese}
-            onChange={(event) => handleExcludeChineseChange(event)}
+            onChange={(event) =>
+              // @ts-expect-error ignore error
+              handleExcludeChineseChange(event.target.checked)
+            }
           />
         </Grid>
         <Grid size={{ xs: 4, md: 2 }}>
@@ -312,7 +278,7 @@ export function SourcePage(props) {
               id="view-count-select"
               label={t("Results per page")}
               value={props.viewCount}
-              onChange={(event) => handleViewCountChange(event)}
+              onChange={(event) => handleViewCountChange(event.target.value)}
               variant="standard"
             >
               <MenuItem value={25}>25</MenuItem>
@@ -350,10 +316,9 @@ export function SourcePage(props) {
         <TableContainer component={Paper}>
           <Table size="small">
             <TableBody>
-              {props.result.data.sentences.map((sentence, i) => (
-                <Sentence
+              {props.result.sentences.map((sentence, i) => (
+                <SentenceView
                   key={i}
-                  bookname={props.bookName}
                   sentence={sentence}
                   highlight_term={hl}
                   ignoreSep={props.ignoreSep}

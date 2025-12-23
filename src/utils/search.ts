@@ -13,13 +13,21 @@ export type Sentence = {
   html: string;
   type: string;
   lang: string;
-  page: string;
+  page_start: string;
+  page_end: string;
   orig_tag: string;
   number_in_page: string;
   number_in_book: number;
   year_sort: number;
   decade_sort: number;
   is_target: boolean;
+  scan_urls:
+    | {
+        edition: string;
+        page: string;
+        url: string;
+      }[]
+    | null;
 };
 
 type SentenceRow = {
@@ -86,30 +94,47 @@ export async function makeCorpusQuery(
         LIMIT %L
       ),
       context AS (
-        SELECT 
-          r.id,
-          r.filename,
-          r.number_in_book,
-          r.year_sort,
-          array_agg(
-            to_jsonb(st) || jsonb_build_object(
-              'is_target', (r.id = st.id)
-            )
-          ) AS sentences
+      SELECT st.*,
+        r.id AS main_id,
+        r.filename AS main_filename,
+        r.number_in_book AS main_number_in_book,
+        r.year_sort AS main_year_sort,
+        (r.id = st.id) AS is_target
         FROM sentences st
           JOIN results r 
             ON st.filename = r.filename
             AND st.number_in_book BETWEEN
                 r.number_in_book-5 AND r.number_in_book+5
-          GROUP BY r.id, r.filename, r.number_in_book, r.year_sort
+      ),
+      context_with_images AS (
+        SELECT *, (
+          SELECT array_agg(i) FROM (
+            SELECT im.page, im.edition, im.url
+            FROM images im
+            WHERE im.book_name = r.filename
+            AND COALESCE(im.section, '') = COALESCE(r.section, '')
+            AND (im.page = r.page_start OR im.page = r.page_end)
+            ) i
+          ) AS scan_urls
+        FROM context r
+      ),
+      context_grouped AS (
+        SELECT
+          main_id,
+          ANY_VALUE(main_filename) AS main_filename,
+          ANY_VALUE(main_number_in_book) AS main_number_in_book,
+          ANY_VALUE(main_year_sort) AS main_year_sort,
+          jsonb_agg(c) AS sentences
+        FROM context_with_images c
+        GROUP BY main_id
       )
-      SELECT b.*, c.sentences, c.number_in_book
-      FROM context c
-      JOIN books b ON c.filename = b.filename
+      SELECT b.*, c.sentences, c.main_number_in_book AS number_in_book
+      FROM context_grouped c
+      JOIN books b ON c.main_filename = b.filename
       ORDER BY
-        c.year_sort ASC,
-        c.filename::bytea ASC,
-        c.number_in_book ASC
+        c.main_year_sort ASC,
+        c.main_filename::bytea ASC,
+        c.main_number_in_book ASC
       `,
     [regex.source],
     offset,

@@ -1,16 +1,30 @@
 "use server";
 
+import { format } from "node-pg-format";
+
 import { getPool } from "@/app/db";
 
-type Sentence = {
+export type Sentence = {
+  html: string;
   text: string;
+  page_start: string;
+  page_end: string;
+  type: string;
+  lang: string;
+  scan_urls:
+    | {
+        url: string;
+        page: string;
+        edition: string;
+      }[]
+    | null;
 };
 
-type SourceData = {
+export type SourceData = {
   name: string;
   year_string: string;
   bibliography: string;
-  attributions: string;
+  attributions: { role: string; name: string }[];
   sentences: Sentence[];
   count: number;
 };
@@ -40,20 +54,35 @@ export async function fetchSource(
 
   try {
     const pool = await getPool();
+
+    const queryString = format(
+      `
+        SELECT *, (
+          SELECT jsonb_agg(i) FROM (
+             SELECT im.page, im.edition, im.url
+             FROM images im
+             WHERE im.book_name = r.filename
+               AND COALESCE(im.section, '') = COALESCE(r.section, '')
+               AND (im.page = r.page_start OR im.page = r.page_end)
+            ) i
+          ) AS scan_urls
+          FROM sentences r
+          WHERE
+            filename = %L
+            ${excludeChineseString}
+          ORDER BY number_in_book ASC
+          OFFSET %L
+          LIMIT %L
+      `,
+      bookName,
+      start,
+      pageSize,
+    );
+    console.log(queryString);
+
     const [book, sentences] = await Promise.all([
       pool.query(`SELECT * FROM books WHERE filename = $1`, [bookName]),
-      pool.query(
-        `
-      SELECT * FROM sentences
-        WHERE
-          filename = $1
-          ${excludeChineseString}
-        ORDER BY number_in_book ASC
-        OFFSET $2
-        limit $3
-    `,
-        [bookName, start, pageSize],
-      ),
+      pool.query(queryString),
     ]);
     console.log("Successfully retrieved source");
 
