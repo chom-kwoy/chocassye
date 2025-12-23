@@ -179,6 +179,7 @@ function add_file(file, xml) {
             cur_section = uni(sentence.textContent.trim());
           }
         }
+        last_page = page;
 
         let page_start = null;
         let page_end = null;
@@ -241,7 +242,7 @@ function add_file(file, xml) {
 }
 
 function is_monotonic(prev_page, cur_page) {
-  if (prev_page === null) {
+  if (prev_page === null || cur_page === null) {
     return false;
   }
   prev_page = prev_page.split("-");
