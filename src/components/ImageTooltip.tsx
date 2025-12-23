@@ -1,3 +1,4 @@
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import {
   Backdrop,
   Button,
@@ -97,6 +98,7 @@ export function PageImagePreview(props: {
   const { t } = useTranslation();
   const [windowWidth, windowHeight] = useDeviceSize();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [curEdition, setCurEdition] = useState(0);
 
   return (
@@ -125,7 +127,14 @@ export function PageImagePreview(props: {
           }}
           open={!imageLoaded}
         >
-          <CircularProgress color="inherit" />
+          {imageError ? (
+            <>
+              <ErrorOutlineIcon color="error" />
+              <span>{t("Error loading image.")}</span>
+            </>
+          ) : (
+            <CircularProgress color="inherit" />
+          )}
         </Backdrop>
         <Image
           src={props.imageURLs[curEdition]?.url}
@@ -138,6 +147,9 @@ export function PageImagePreview(props: {
           fill={true}
           onLoad={() => {
             setImageLoaded(true);
+          }}
+          onError={() => {
+            setImageError(true);
           }}
         />
       </Stack>
