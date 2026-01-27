@@ -5,7 +5,7 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import React from "react";
 
-import { DONATIONS_FILE_PATH } from "@/app/api/webhook/bmc/route";
+import { DONATIONS_FILE_PATH } from "@/app/api/webhook/bmc/constants";
 import { DonationInfo, Supporter } from "@/app/search/types";
 import { getTranslation } from "@/components/detectLanguage";
 
@@ -28,7 +28,8 @@ export async function generateMetadata({
     description: t("page-description"),
   };
 }
-export async function getBMCInfo(): Promise<DonationInfo> {
+
+async function getBMCInfo(): Promise<DonationInfo> {
   // 1. Read from local file (Simulating DB)
   let allSupporters: Supporter[] = [];
 

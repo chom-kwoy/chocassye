@@ -1,11 +1,9 @@
 import crypto from "crypto";
 import fs from "fs";
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
 
+import { DONATIONS_FILE_PATH } from "@/app/api/webhook/bmc/constants";
 import { Supporter } from "@/app/search/types";
-
-export const DONATIONS_FILE_PATH = path.join(process.cwd(), "donations.json");
 
 export async function POST(req: NextRequest) {
   try {
