@@ -1,6 +1,12 @@
+"use server";
+
+// @ts-expect-error there is no type definition for buymeacoffee.js
+import BMC from "buymeacoffee.js";
 import { Metadata } from "next";
+import { cookies } from "next/headers";
 import React from "react";
 
+import { DonationInfo, Supporter } from "@/app/search/types";
 import { getTranslation } from "@/components/detectLanguage";
 
 import { getStats, search } from "./search";
@@ -23,11 +29,63 @@ export async function generateMetadata({
   };
 }
 
+async function getBMCInfo(): Promise<DonationInfo> {
+  const BMC_API_TOKEN = process.env.BMC_API_TOKEN;
+  const coffee = new BMC(BMC_API_TOKEN);
+
+  // retrieve supporters data
+  const supportersInfo: {
+    data: Supporter[];
+  } | null = await coffee.Supporters();
+  console.log("supporters", supportersInfo);
+
+  if (!supportersInfo) {
+    throw new Error("Failed to retrieve supporters info");
+  }
+
+  // filter supporters with >=1 USD and not refunded
+  // and from this month
+  const validSupporters = supportersInfo.data.filter((supporter) => {
+    const supportDate = new Date(supporter.support_created_on);
+    const today = new Date();
+    const isFromThisMonth = supportDate.getMonth() === today.getMonth();
+    const amount =
+      parseFloat(supporter.support_coffee_price) * supporter.support_coffees;
+    return (
+      supporter.support_currency === "USD" &&
+      supporter.refunded_at === null &&
+      amount >= 1.0 &&
+      isFromThisMonth
+    );
+  });
+
+  let totalDonations = 0;
+  validSupporters.forEach((supporter) => {
+    const amount =
+      parseInt(supporter.support_coffee_price) * supporter.support_coffees;
+    totalDonations += amount;
+  });
+  console.log("totalDonations", totalDonations);
+
+  return { totalDonations, supporters: validSupporters };
+}
+
 export default async function Search({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
+  let donationInfo: DonationInfo | null = null;
+  const cookieStore = await cookies();
+  const hasSeenModal = cookieStore.has("donationModalSeen");
+  if (!hasSeenModal) {
+    try {
+      donationInfo = await getBMCInfo();
+    } catch (e) {
+      console.error("Failed to retrieve BMC info", e);
+    }
+  }
+
   const params = await searchParams;
   const query = {
     term: params.term ?? "",
@@ -52,6 +110,7 @@ export default async function Search({
           ignoreSep: query.ignoreSep,
         }}
         statsPromise={statsPromise}
+        donationInfo={donationInfo}
       />
     );
   } else {

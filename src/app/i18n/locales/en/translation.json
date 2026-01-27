@@ -38,5 +38,12 @@
   "Results per page": "Results per page",
   "Unknown year": "-",
   "Preview": "Preview",
-  "Regular Expression Search": "Regular Expression Search"
+  "Regular Expression Search": "Regular Expression Search",
+  "Server Fund": "Server Fund",
+  "Support the server costs": "This website is my hobby project and I am not affiliated with any organization. If you like this website, please consider supporting the server costs by donating. Thank you!",
+  "$%d raised": "${totalDonations} raised",
+  "Goal: %d this month": "Goal: ${donationGoal} this month",
+  "Recent Supporters (%d)": "Recent Supporters ({numSupporters})",
+  "Be the first to support this month!": "Be the first to support this month!",
+  "Donate": "Donate"
 }

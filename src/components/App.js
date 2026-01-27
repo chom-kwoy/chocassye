@@ -4,6 +4,7 @@ import CollectionsBookmarkIcon from "@mui/icons-material/CollectionsBookmark";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LanguageIcon from "@mui/icons-material/Language";
 import LightModeIcon from "@mui/icons-material/LightMode";
+import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
   AppBar,
@@ -305,7 +306,7 @@ function App(props) {
 
       {/* Footer */}
       <AppBar position="static">
-        <Toolbar disableGutters>
+        <Toolbar disableGutters sx={{ display: "flex" }}>
           <Typography
             variant="h7"
             noWrap
@@ -323,6 +324,20 @@ function App(props) {
           >
             {t("Search Engine")}
           </Typography>
+          <Button
+            variant="contained"
+            href="https://buymeacoffee.com/chomkwoy"
+            target="_blank"
+            startIcon={<LocalCafeIcon />}
+            sx={{
+              borderRadius: 50,
+              py: 1.0,
+              mx: 1.5,
+              textTransform: "none",
+            }}
+          >
+            {t("Donate")}
+          </Button>
         </Toolbar>
       </AppBar>
     </React.Fragment>

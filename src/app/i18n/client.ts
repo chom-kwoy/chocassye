@@ -61,7 +61,7 @@ export function useTranslation(
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
       if (i18nextCookie === lng) return;
-      setCookie(cookieName, lng, { path: "/" });
+      setCookie(cookieName, lng, { path: "/", maxAge: 60 * 60 * 24 * 365 });
     }, [lng, i18nextCookie]);
   }
   return ret;

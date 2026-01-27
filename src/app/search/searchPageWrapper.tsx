@@ -3,6 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
+import DonationModal from "@/app/search/donationDialog";
+import { DonationInfo } from "@/app/search/types";
+
 import { Book, SearchQuery, StatsResult } from "./search";
 import { SearchPage } from "./searchPage";
 
@@ -39,6 +42,7 @@ function makeSearchParams(query: SearchQuery): URLSearchParams {
 export function SearchPageWrapper({
   result,
   statsPromise,
+  donationInfo,
 }: {
   result: {
     loaded: boolean;
@@ -51,6 +55,7 @@ export function SearchPageWrapper({
     ignoreSep: boolean;
   };
   statsPromise: Promise<StatsResult>;
+  donationInfo: DonationInfo | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
@@ -123,35 +128,38 @@ export function SearchPageWrapper({
   }
 
   return (
-    <SearchPage
-      // Search parameters
-      term={query.term}
-      setTerm={(value: string) => setQuery({ ...query, term: value })}
-      doc={query.doc}
-      setDoc={(value: string) => setQuery({ ...query, doc: value })}
-      page={query.page}
-      setPage={setPage}
-      excludeModern={query.excludeModern}
-      setExcludeModern={(value: boolean) =>
-        setQuery({ ...query, excludeModern: value })
-      }
-      ignoreSep={query.ignoreSep}
-      setIgnoreSep={(value: boolean) =>
-        setQuery({ ...query, ignoreSep: value })
-      }
-      // Current Results
-      loaded={!isPending}
-      result={result.result}
-      pageN={result.page_N}
-      resultTerm={result.result_term}
-      resultPage={result.result_page}
-      resultDoc={result.result_doc}
-      resultExcludeModern={result.excludeModern}
-      resultIgnoreSep={result.ignoreSep}
-      // Current Stats
-      statsPromise={refreshStats ? statsPromise : null}
-      // Callbacks
-      onRefresh={forceRefreshResults}
-    />
+    <>
+      <SearchPage
+        // Search parameters
+        term={query.term}
+        setTerm={(value: string) => setQuery({ ...query, term: value })}
+        doc={query.doc}
+        setDoc={(value: string) => setQuery({ ...query, doc: value })}
+        page={query.page}
+        setPage={setPage}
+        excludeModern={query.excludeModern}
+        setExcludeModern={(value: boolean) =>
+          setQuery({ ...query, excludeModern: value })
+        }
+        ignoreSep={query.ignoreSep}
+        setIgnoreSep={(value: boolean) =>
+          setQuery({ ...query, ignoreSep: value })
+        }
+        // Current Results
+        loaded={!isPending}
+        result={result.result}
+        pageN={result.page_N}
+        resultTerm={result.result_term}
+        resultPage={result.result_page}
+        resultDoc={result.result_doc}
+        resultExcludeModern={result.excludeModern}
+        resultIgnoreSep={result.ignoreSep}
+        // Current Stats
+        statsPromise={refreshStats ? statsPromise : null}
+        // Callbacks
+        onRefresh={forceRefreshResults}
+      />
+      {donationInfo && <DonationModal donationInfo={donationInfo} />}
+    </>
   );
 }

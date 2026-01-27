@@ -39,13 +39,19 @@ export default function DarkLightThemeProvider({
   const preferredTheme = prefersDarkMode ? darkTheme : lightTheme;
   if (!isThemeArtificallySet && preferredTheme !== curTheme) {
     setCurTheme(preferredTheme);
-    setCookie(THEME_COOKIE_KEY, prefersDarkMode ? "dark" : "light");
+    setCookie(THEME_COOKIE_KEY, prefersDarkMode ? "dark" : "light", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+    });
   }
 
   const setTheme = React.useCallback((theme: "light" | "dark") => {
     setCurTheme(theme === "dark" ? darkTheme : lightTheme);
     setIsThemeArtificallySet(true);
-    setCookie(THEME_COOKIE_KEY, theme);
+    setCookie(THEME_COOKIE_KEY, theme, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+    });
   }, []);
 
   return (
