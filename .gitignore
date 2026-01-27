@@ -13,3 +13,4 @@ __pycache__/*
 index/*
 dist/*
 **/.next/*
+donations.json

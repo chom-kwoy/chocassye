@@ -1,11 +1,11 @@
 "use server";
 
-// @ts-expect-error there is no type definition for buymeacoffee.js
-import BMC from "buymeacoffee.js";
+import fs from "fs";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import React from "react";
 
+import { DONATIONS_FILE_PATH } from "@/app/api/webhook/bmc/route";
 import { DonationInfo, Supporter } from "@/app/search/types";
 import { getTranslation } from "@/components/detectLanguage";
 
@@ -28,29 +28,30 @@ export async function generateMetadata({
     description: t("page-description"),
   };
 }
+export async function getBMCInfo(): Promise<DonationInfo> {
+  // 1. Read from local file (Simulating DB)
+  let allSupporters: Supporter[] = [];
 
-async function getBMCInfo(): Promise<DonationInfo> {
-  const BMC_API_TOKEN = process.env.BMC_API_TOKEN;
-  const coffee = new BMC(BMC_API_TOKEN);
-
-  // retrieve supporters data
-  const supportersInfo: {
-    data: Supporter[];
-  } | null = await coffee.Supporters();
-  console.log("supporters", supportersInfo);
-
-  if (!supportersInfo) {
-    throw new Error("Failed to retrieve supporters info");
+  if (fs.existsSync(DONATIONS_FILE_PATH)) {
+    try {
+      const fileContent = fs.readFileSync(DONATIONS_FILE_PATH, "utf-8");
+      allSupporters = JSON.parse(fileContent);
+    } catch (error) {
+      console.error("Failed to read local donation data", error);
+    }
   }
 
-  // filter supporters with >=1 USD and not refunded
-  // and from this month
-  const validSupporters = supportersInfo.data.filter((supporter) => {
+  // 2. Reuse your exact filtering logic
+  const validSupporters = allSupporters.filter((supporter) => {
     const supportDate = new Date(supporter.support_created_on);
     const today = new Date();
-    const isFromThisMonth = supportDate.getMonth() === today.getMonth();
+    const isFromThisMonth =
+      supportDate.getMonth() === today.getMonth() &&
+      supportDate.getFullYear() === today.getFullYear();
+
     const amount =
       parseFloat(supporter.support_coffee_price) * supporter.support_coffees;
+
     return (
       supporter.support_currency === "USD" &&
       supporter.refunded_at === null &&
@@ -59,10 +60,11 @@ async function getBMCInfo(): Promise<DonationInfo> {
     );
   });
 
+  // 3. Calculate Total
   let totalDonations = 0;
   validSupporters.forEach((supporter) => {
     const amount =
-      parseInt(supporter.support_coffee_price) * supporter.support_coffees;
+      parseFloat(supporter.support_coffee_price) * supporter.support_coffees;
     totalDonations += amount;
   });
   console.log("totalDonations", totalDonations);

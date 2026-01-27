@@ -1,4 +1,6 @@
 export type Supporter = {
+  support_id: number;
+  transaction_id: string;
   support_coffee_price: string; // e.g. '5.0000'
   support_currency: string; // e.g. 'USD'
   country: string;
