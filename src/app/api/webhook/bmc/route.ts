@@ -3,7 +3,6 @@ import fs from "fs";
 import { NextRequest, NextResponse } from "next/server";
 
 import { DONATIONS_FILE_PATH } from "@/app/api/webhook/bmc/constants";
-// Assuming this matches your donations.json structure exactly
 import { Supporter } from "@/app/search/types";
 
 // 1. Define the incoming Webhook Data Structure
@@ -17,7 +16,7 @@ interface BMCWebhookData {
   refunded: string; // "true" | "false"
   created_at: number; // Unix timestamp
   note_hidden: string; // "true" | "false"
-  refunded_at: string | null;
+  refunded_at: number | null; // Note: In "refunded" event, this is a Unix timestamp (number)
   support_note: string | null;
   support_type: string;
   supporter_name: string;
@@ -38,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     let body: {
       type: string;
-      data: BMCWebhookData; // Use the new interface here
+      data: BMCWebhookData;
     };
 
     if (secret && signature) {
@@ -65,7 +64,6 @@ export async function POST(req: NextRequest) {
 
     if (type === "donation.created") {
       // 2. Map Webhook Data to your specific JSON Schema
-      // We convert the Unix timestamp to "YYYY-MM-DD HH:MM:SS"
       const dateObj = new Date(data.created_at * 1000);
       const formattedDate = dateObj
         .toISOString()
@@ -78,13 +76,28 @@ export async function POST(req: NextRequest) {
         transaction_id: data.transaction_id,
         support_created_on: formattedDate,
         supporter_name: data.supporter_name || "Anonymous",
-        support_coffee_price: data.coffee_price.toFixed(4), // "5.0000"
+        support_coffee_price: data.coffee_price.toFixed(4),
         support_currency: data.currency,
-        country: "Unknown", // Webhook doesn't provide country
-        refunded_at: data.refunded_at,
+        country: "Unknown",
+        refunded_at: null, // New donations aren't refunded yet
       };
 
       saveDonation(mappedSupporter);
+    }
+
+    // 3. Handle Refund Event
+    else if (type === "donation.refunded") {
+      // Convert unix timestamp to string format if it exists
+      let formattedRefundDate = null;
+      if (data.refunded_at) {
+        const dateObj = new Date(data.refunded_at * 1000);
+        formattedRefundDate = dateObj
+          .toISOString()
+          .replace("T", " ")
+          .substring(0, 19);
+      }
+
+      updateRefundStatus(data.transaction_id, formattedRefundDate);
     }
 
     return NextResponse.json({ success: true });
@@ -115,10 +128,39 @@ function saveDonation(newSupporter: Supporter) {
   );
 
   if (!exists) {
-    // Optional: Add to the TOP of the list if you want recent first
     supporters.push(newSupporter);
-
     fs.writeFileSync(DONATIONS_FILE_PATH, JSON.stringify(supporters, null, 2));
     console.log(`Saved new donation from ${newSupporter.supporter_name}`);
+  }
+}
+
+// Helper to find and update existing record
+function updateRefundStatus(transactionId: string, refundedAt: string | null) {
+  if (!fs.existsSync(DONATIONS_FILE_PATH)) return;
+
+  try {
+    const fileContent = fs.readFileSync(DONATIONS_FILE_PATH, "utf-8");
+    const supporters: Supporter[] = JSON.parse(fileContent);
+
+    // Find the donation
+    const index = supporters.findIndex(
+      (s) => s.transaction_id === transactionId,
+    );
+
+    if (index !== -1) {
+      // Update only the refunded_at field
+      supporters[index].refunded_at = refundedAt;
+
+      // Save back to file
+      fs.writeFileSync(
+        DONATIONS_FILE_PATH,
+        JSON.stringify(supporters, null, 2),
+      );
+      console.log(`Updated refund status for transaction: ${transactionId}`);
+    } else {
+      console.warn(`Refund received for unknown transaction: ${transactionId}`);
+    }
+  } catch (e) {
+    console.error("Error updating refund status:", e);
   }
 }
