@@ -59,6 +59,8 @@ export async function POST(req: NextRequest) {
       body = await req.json();
     }
 
+    console.log("Webhook received:", body);
+
     const { type, data } = body;
 
     if (type === "donation.created") {
