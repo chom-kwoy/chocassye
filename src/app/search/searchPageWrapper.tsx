@@ -5,6 +5,7 @@ import React from "react";
 
 import DonationModal from "@/app/search/donationDialog";
 import { DonationInfo } from "@/app/search/types";
+import { TextClickPopup } from "@/components/TextClickPopup";
 
 import { Book, SearchQuery, StatsResult } from "./search";
 import { SearchPage } from "./searchPage";
@@ -128,7 +129,7 @@ export function SearchPageWrapper({
   }
 
   return (
-    <>
+    <TextClickPopup>
       <SearchPage
         // Search parameters
         term={query.term}
@@ -160,6 +161,6 @@ export function SearchPageWrapper({
         onRefresh={forceRefreshResults}
       />
       {donationInfo && <DonationModal donationInfo={donationInfo} />}
-    </>
+    </TextClickPopup>
   );
 }
