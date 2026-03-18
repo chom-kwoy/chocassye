@@ -70,7 +70,9 @@ export function MiddleChinesePronInfo({
   leftWidth?: number;
 }) {
   const CHONGNIU_RHYME_GROUPS = "支脂祭眞質仙薛宵侵緝鹽葉";
-  const baxter = reading.initial.baxter + reading.final.baxter;
+  const TONES: { [key: string]: string } = { 平: "", 上: "X", 去: "H", 入: "" };
+  const baxter =
+    reading.initial.baxter + reading.final.baxter + TONES[reading.tone];
   let zhongniu: string | null = null;
   if (
     reading.division === "三" &&
