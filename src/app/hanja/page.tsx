@@ -71,8 +71,12 @@ export function MiddleChinesePronInfo({
 }) {
   const CHONGNIU_RHYME_GROUPS = "支脂祭眞質仙薛宵侵緝鹽葉";
   const TONES: { [key: string]: string } = { 平: "", 上: "X", 去: "H", 入: "" };
-  const baxter =
-    reading.initial.baxter + reading.final.baxter + TONES[reading.tone];
+  let baxterFinal = reading.final.baxter;
+  if (reading.initial.baxter === "y" && baxterFinal.startsWith("j")) {
+    // yj -> j
+    baxterFinal = baxterFinal.slice(1);
+  }
+  const baxter = reading.initial.baxter + baxterFinal + TONES[reading.tone];
   let zhongniu: string | null = null;
   if (
     reading.division === "三" &&
