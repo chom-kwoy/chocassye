@@ -47,7 +47,7 @@ function getWordAtPoint(
   }
 
   const text = node.textContent ?? "";
-  const offset = pos.offset;
+  const offset = Math.min(pos.offset, text.length - 1);
 
   const match = text.slice(offset).match(/\p{Script=Han}/u);
   if (match === null) {
