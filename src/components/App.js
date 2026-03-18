@@ -81,265 +81,281 @@ function App(props) {
 
   return (
     <React.Fragment>
-      {/* Header */}
-      <AppBar position="static" sx={appbarStyle}>
-        <Container>
-          <Toolbar disableGutters>
-            {/* For big screens */}
-            <Link href={`/search`}>
-              <CollectionsBookmarkIcon
-                sx={{ display: { xs: "none", md: "flex" }, mr: 1 }}
-              />
-            </Link>
-            <Typography
-              variant="h6"
-              noWrap
-              sx={{
-                mr: 2,
-                display: { xs: "none", md: "flex" },
-                fontWeight: 700,
-                letterSpacing: ".1rem",
-                color: "inherit",
-                textDecoration: "none",
-              }}
-            >
-              <Box
-                onClick={() => router.push(`/search`)}
-                sx={{ cursor: "pointer" }}
-              >
-                {t("Chocassye")}
-              </Box>
-            </Typography>
-            <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
-              <Button
-                sx={{ my: 2, color: "white", display: "block" }}
-                onClick={() => router.push(`/search`)}
-              >
-                {t("Search")}
-              </Button>
-              <Button
-                sx={{ my: 2, color: "white", display: "block" }}
-                onClick={() => router.push(`/sourcelist`)}
-              >
-                {t("Sources")}
-              </Button>
-              <Button
-                sx={{ my: 2, color: "white", display: "block" }}
-                onClick={() => router.push(`/howtouse`)}
-              >
-                {t("How to Use")}
-              </Button>
-              <Button
-                sx={{ my: 2, color: "white", display: "block" }}
-                onClick={() => router.push(`/word`)}
-              >
-                {t("Machwoassye")}
-              </Button>
-              <Button
-                sx={{ my: 2, color: "white", display: "block" }}
-                onClick={() => router.push(`/about`)}
-              >
-                {t("About")}
-              </Button>
-            </Box>
-            <Box sx={{ display: { xs: "none", md: "flex" } }}>
-              <IconButton
-                size="large"
-                aria-controls="lang-change-appbar"
-                aria-haspopup="true"
-                onClick={() =>
-                  setCurTheme(curTheme === lightTheme ? "dark" : "light")
-                }
-                color="inherit"
-              >
-                {curTheme === lightTheme ? <LightModeIcon /> : <DarkModeIcon />}
-              </IconButton>
-            </Box>
-            <Box sx={{ minWidth: 150, display: { xs: "none", md: "flex" } }}>
-              <ThemeProvider theme={darkTheme}>
-                <FormControl size="small" fullWidth>
-                  <InputLabel id="lang-select-label">
-                    {t("Language")}
-                  </InputLabel>
-                  <Select
-                    variant="outlined"
-                    labelId="lang-select-label"
-                    onChange={(event) => handleLangSelect(event.target.value)}
-                    value={lng}
-                  >
-                    <MenuItem value="ko">{t("Korean")}</MenuItem>
-                    <MenuItem value="en">{t("English")}</MenuItem>
-                  </Select>
-                </FormControl>
-              </ThemeProvider>
-            </Box>
-
-            {/* For small screens */}
-            <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
-              <IconButton
-                size="large"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={(e) => handleOpenNavMenu(e)}
-                color="inherit"
-              >
-                <MenuIcon />
-              </IconButton>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorElNav}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "left",
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "left",
-                }}
-                open={Boolean(anchorElNav)}
-                onClose={(e) => handleCloseNavMenu(e)}
+      <Box
+        sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      >
+        {/* Header */}
+        <AppBar position="static" sx={appbarStyle}>
+          <Container>
+            <Toolbar disableGutters>
+              {/* For big screens */}
+              <Link href={`/search`}>
+                <CollectionsBookmarkIcon
+                  sx={{ display: { xs: "none", md: "flex" }, mr: 1 }}
+                />
+              </Link>
+              <Typography
+                variant="h6"
+                noWrap
                 sx={{
-                  display: { xs: "block", md: "none" },
+                  mr: 2,
+                  display: { xs: "none", md: "flex" },
+                  fontWeight: 700,
+                  letterSpacing: ".1rem",
+                  color: "inherit",
+                  textDecoration: "none",
                 }}
               >
-                <MenuItem onClick={() => router.push(`/search`)}>
-                  <Typography textAlign="center">{t("Search")}</Typography>
-                </MenuItem>
-                <MenuItem onClick={() => router.push(`/sourcelist`)}>
-                  <Typography textAlign="center">{t("Sources")}</Typography>
-                </MenuItem>
-                <MenuItem onClick={() => router.push(`/howtouse`)}>
-                  <Typography textAlign="center">{t("How to Use")}</Typography>
-                </MenuItem>
-                <MenuItem onClick={() => router.push(`/word`)}>
-                  <Typography textAlign="center">{t("Machwoassye")}</Typography>
-                </MenuItem>
-                <MenuItem onClick={() => router.push(`/about`)}>
-                  <Typography textAlign="center">{t("About")}</Typography>
-                </MenuItem>
-              </Menu>
-            </Box>
-            <Typography
-              variant="h5"
-              noWrap
-              sx={{
-                mr: 2,
-                display: { xs: "flex", md: "none" },
-                flexGrow: 1,
-                fontWeight: 700,
-                letterSpacing: ".1rem",
-                color: "inherit",
-                textDecoration: "none",
-              }}
-            >
-              <Box
-                onClick={() => router.push(`/search`)}
-                sx={{ cursor: "pointer" }}
-              >
-                {t("Chocassye")}
+                <Box
+                  onClick={() => router.push(`/search`)}
+                  sx={{ cursor: "pointer" }}
+                >
+                  {t("Chocassye")}
+                </Box>
+              </Typography>
+              <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
+                <Button
+                  sx={{ my: 2, color: "white", display: "block" }}
+                  onClick={() => router.push(`/search`)}
+                >
+                  {t("Search")}
+                </Button>
+                <Button
+                  sx={{ my: 2, color: "white", display: "block" }}
+                  onClick={() => router.push(`/sourcelist`)}
+                >
+                  {t("Sources")}
+                </Button>
+                <Button
+                  sx={{ my: 2, color: "white", display: "block" }}
+                  onClick={() => router.push(`/howtouse`)}
+                >
+                  {t("How to Use")}
+                </Button>
+                <Button
+                  sx={{ my: 2, color: "white", display: "block" }}
+                  onClick={() => router.push(`/word`)}
+                >
+                  {t("Machwoassye")}
+                </Button>
+                <Button
+                  sx={{ my: 2, color: "white", display: "block" }}
+                  onClick={() => router.push(`/about`)}
+                >
+                  {t("About")}
+                </Button>
               </Box>
-            </Typography>
+              <Box sx={{ display: { xs: "none", md: "flex" } }}>
+                <IconButton
+                  size="large"
+                  aria-controls="lang-change-appbar"
+                  aria-haspopup="true"
+                  onClick={() =>
+                    setCurTheme(curTheme === lightTheme ? "dark" : "light")
+                  }
+                  color="inherit"
+                >
+                  {curTheme === lightTheme ? (
+                    <LightModeIcon />
+                  ) : (
+                    <DarkModeIcon />
+                  )}
+                </IconButton>
+              </Box>
+              <Box sx={{ minWidth: 150, display: { xs: "none", md: "flex" } }}>
+                <ThemeProvider theme={darkTheme}>
+                  <FormControl size="small" fullWidth>
+                    <InputLabel id="lang-select-label">
+                      {t("Language")}
+                    </InputLabel>
+                    <Select
+                      variant="outlined"
+                      labelId="lang-select-label"
+                      onChange={(event) => handleLangSelect(event.target.value)}
+                      value={lng}
+                    >
+                      <MenuItem value="ko">{t("Korean")}</MenuItem>
+                      <MenuItem value="en">{t("English")}</MenuItem>
+                    </Select>
+                  </FormControl>
+                </ThemeProvider>
+              </Box>
 
-            <Box sx={{ display: { xs: "flex", md: "none" } }}>
-              <IconButton
-                size="large"
-                aria-controls="lang-change-appbar"
-                aria-haspopup="true"
-                onClick={() =>
-                  setCurTheme(curTheme === lightTheme ? "dark" : "light")
-                }
-                color="inherit"
-              >
-                {curTheme === lightTheme ? <LightModeIcon /> : <DarkModeIcon />}
-              </IconButton>
-            </Box>
-
-            <Box sx={{ display: { xs: "flex", md: "none" } }}>
-              <IconButton
-                size="large"
-                aria-controls="lang-change-appbar"
-                aria-haspopup="true"
-                onClick={(e) => handleOpenLangMenu(e)}
-                color="inherit"
-              >
-                <LanguageIcon />
-              </IconButton>
-              <Menu
-                id="lang-change-appbar"
-                anchorEl={anchorElLang}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "left",
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "left",
-                }}
-                open={Boolean(anchorElLang)}
-                onClose={(e) => handleCloseLangMenu(e)}
+              {/* For small screens */}
+              <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
+                <IconButton
+                  size="large"
+                  aria-controls="menu-appbar"
+                  aria-haspopup="true"
+                  onClick={(e) => handleOpenNavMenu(e)}
+                  color="inherit"
+                >
+                  <MenuIcon />
+                </IconButton>
+                <Menu
+                  id="menu-appbar"
+                  anchorEl={anchorElNav}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "left",
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "left",
+                  }}
+                  open={Boolean(anchorElNav)}
+                  onClose={(e) => handleCloseNavMenu(e)}
+                  sx={{
+                    display: { xs: "block", md: "none" },
+                  }}
+                >
+                  <MenuItem onClick={() => router.push(`/search`)}>
+                    <Typography textAlign="center">{t("Search")}</Typography>
+                  </MenuItem>
+                  <MenuItem onClick={() => router.push(`/sourcelist`)}>
+                    <Typography textAlign="center">{t("Sources")}</Typography>
+                  </MenuItem>
+                  <MenuItem onClick={() => router.push(`/howtouse`)}>
+                    <Typography textAlign="center">
+                      {t("How to Use")}
+                    </Typography>
+                  </MenuItem>
+                  <MenuItem onClick={() => router.push(`/word`)}>
+                    <Typography textAlign="center">
+                      {t("Machwoassye")}
+                    </Typography>
+                  </MenuItem>
+                  <MenuItem onClick={() => router.push(`/about`)}>
+                    <Typography textAlign="center">{t("About")}</Typography>
+                  </MenuItem>
+                </Menu>
+              </Box>
+              <Typography
+                variant="h5"
+                noWrap
                 sx={{
-                  display: { xs: "block", md: "none" },
+                  mr: 2,
+                  display: { xs: "flex", md: "none" },
+                  flexGrow: 1,
+                  fontWeight: 700,
+                  letterSpacing: ".1rem",
+                  color: "inherit",
+                  textDecoration: "none",
                 }}
               >
-                <MenuItem onClick={() => handleLangSelect("ko")}>
-                  <Typography textAlign="center">{t("Korean")}</Typography>
-                </MenuItem>
-                <MenuItem onClick={() => handleLangSelect("en")}>
-                  <Typography textAlign="center">{t("English")}</Typography>
-                </MenuItem>
-              </Menu>
-            </Box>
-          </Toolbar>
+                <Box
+                  onClick={() => router.push(`/search`)}
+                  sx={{ cursor: "pointer" }}
+                >
+                  {t("Chocassye")}
+                </Box>
+              </Typography>
+
+              <Box sx={{ display: { xs: "flex", md: "none" } }}>
+                <IconButton
+                  size="large"
+                  aria-controls="lang-change-appbar"
+                  aria-haspopup="true"
+                  onClick={() =>
+                    setCurTheme(curTheme === lightTheme ? "dark" : "light")
+                  }
+                  color="inherit"
+                >
+                  {curTheme === lightTheme ? (
+                    <LightModeIcon />
+                  ) : (
+                    <DarkModeIcon />
+                  )}
+                </IconButton>
+              </Box>
+
+              <Box sx={{ display: { xs: "flex", md: "none" } }}>
+                <IconButton
+                  size="large"
+                  aria-controls="lang-change-appbar"
+                  aria-haspopup="true"
+                  onClick={(e) => handleOpenLangMenu(e)}
+                  color="inherit"
+                >
+                  <LanguageIcon />
+                </IconButton>
+                <Menu
+                  id="lang-change-appbar"
+                  anchorEl={anchorElLang}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "left",
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "left",
+                  }}
+                  open={Boolean(anchorElLang)}
+                  onClose={(e) => handleCloseLangMenu(e)}
+                  sx={{
+                    display: { xs: "block", md: "none" },
+                  }}
+                >
+                  <MenuItem onClick={() => handleLangSelect("ko")}>
+                    <Typography textAlign="center">{t("Korean")}</Typography>
+                  </MenuItem>
+                  <MenuItem onClick={() => handleLangSelect("en")}>
+                    <Typography textAlign="center">{t("English")}</Typography>
+                  </MenuItem>
+                </Menu>
+              </Box>
+            </Toolbar>
+          </Container>
+        </AppBar>
+
+        <Container maxWidth="lg" sx={{ mb: 4, px: { xs: 0.2, sm: 2 } }}>
+          <Paper
+            variant="outlined"
+            sx={{ my: { xs: 2, md: 4 }, p: { xs: 1, md: 3 } }}
+          >
+            {props.children}
+          </Paper>
         </Container>
-      </AppBar>
 
-      <Container maxWidth="lg" sx={{ mb: 4, px: { xs: 0.2, sm: 2 } }}>
-        <Paper
-          variant="outlined"
-          sx={{ my: { xs: 2, md: 4 }, p: { xs: 1, md: 3 } }}
-        >
-          {props.children}
-        </Paper>
-      </Container>
-
-      {/* Footer */}
-      <AppBar position="static">
-        <Toolbar disableGutters sx={{ display: "flex" }}>
-          <Typography
-            variant="h7"
-            noWrap
-            justifyContent="center"
-            alignItems="center"
-            sx={{
-              mr: 2,
-              display: "flex",
-              flexGrow: 1,
-              fontWeight: 500,
-              letterSpacing: ".1rem",
-              color: "inherit",
-              textDecoration: "none",
-            }}
-          >
-            {t("Search Engine")}
-          </Typography>
-          <Button
-            variant="contained"
-            href="https://buymeacoffee.com/chomkwoy"
-            target="_blank"
-            startIcon={<LocalCafeIcon />}
-            sx={{
-              borderRadius: 50,
-              py: 1.0,
-              mx: 1.5,
-              textTransform: "none",
-            }}
-          >
-            {t("Donate")}
-          </Button>
-        </Toolbar>
-      </AppBar>
+        {/* Footer */}
+        <AppBar position="static" sx={{ mt: "auto" }}>
+          <Toolbar disableGutters sx={{ display: "flex" }}>
+            <Typography
+              variant="h7"
+              noWrap
+              justifyContent="center"
+              alignItems="center"
+              sx={{
+                mr: 2,
+                display: "flex",
+                flexGrow: 1,
+                fontWeight: 500,
+                letterSpacing: ".1rem",
+                color: "inherit",
+                textDecoration: "none",
+              }}
+            >
+              {t("Search Engine")}
+            </Typography>
+            <Button
+              variant="contained"
+              href="https://buymeacoffee.com/chomkwoy"
+              target="_blank"
+              startIcon={<LocalCafeIcon />}
+              sx={{
+                borderRadius: 50,
+                py: 1.0,
+                mx: 1.5,
+                textTransform: "none",
+              }}
+            >
+              {t("Donate")}
+            </Button>
+          </Toolbar>
+        </AppBar>
+      </Box>
     </React.Fragment>
   );
 }
