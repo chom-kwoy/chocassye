@@ -63,7 +63,7 @@ export default function HanjaPage() {
 }
 
 const CHONGNIU_RHYME_GROUPS = "支脂祭眞質仙薛宵侵緝鹽葉";
-const SEMI_CHONGNIU_RHYME_GROUPS = CHONGNIU_RHYME_GROUPS + "庚陌清昔幽";
+const SEMI_CHONGNIU_RHYME_GROUPS = CHONGNIU_RHYME_GROUPS + "諄庚陌清昔幽";
 const CHONGNIU_INITIALS = [
   "p",
   "ph",
