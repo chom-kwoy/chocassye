@@ -122,11 +122,11 @@ function getMCFinal(
   rhymeGroup: string,
   openClosed: string,
   division: string,
-  zhongniu: string,
+  chongniu: string,
   tone: string,
 ): Final | null {
   const data = tone === "入" ? MC_CHECKED_TONE_FINALS_DATA : MC_FINALS_DATA;
-  let result = data.get(rhymeGroup + zhongniu + division + openClosed);
+  let result = data.get(rhymeGroup + chongniu + division + openClosed);
   if (result === undefined)
     result = data.get(rhymeGroup + division + openClosed);
   if (result === undefined) result = data.get(rhymeGroup + division);
@@ -141,7 +141,7 @@ export type Reading = {
   rhymeGroup: string;
   division: string;
   openClosed: string;
-  zhongniu: string;
+  chongniu: string;
   tone: string;
   fanqie: string;
 };
@@ -151,7 +151,7 @@ type ReadingData = {
   rhymeGroup: string;
   division: string;
   openClosed: string;
-  zhongniu: string;
+  chongniu: string;
   tone: string;
   fanqie: string;
 };
@@ -195,7 +195,7 @@ async function readMCDataFiles() {
           rhymeGroup: match[2],
           division: match[3],
           openClosed: match[4],
-          zhongniu: match[7] ?? "",
+          chongniu: match[7] ?? "",
           tone: match[5],
           fanqie: match[6],
         };
@@ -221,7 +221,7 @@ export async function getMCData(char: string): Promise<Reading[] | null> {
       record.rhymeGroup,
       record.openClosed,
       record.division,
-      record.zhongniu,
+      record.chongniu,
       record.tone,
     );
     if (initial === null || final === null) {
@@ -232,7 +232,7 @@ export async function getMCData(char: string): Promise<Reading[] | null> {
         record.rhymeGroup,
         record.division,
         record.openClosed,
-        record.zhongniu,
+        record.chongniu,
       );
     }
     return {
