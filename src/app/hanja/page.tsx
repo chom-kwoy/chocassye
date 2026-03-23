@@ -101,7 +101,8 @@ export function MiddleChinesePronInfo({
       baxterFinal = baxterFinal
         .replace(/^ji(?=e)/, "j")
         .replace(/^jwi(?=e)/, "jw")
-        .replace(/^ji/, "i");
+        .replace(/^ji/, "i")
+        .replace(/^jwi/, "wi");
     }
   }
   // yj -> j
