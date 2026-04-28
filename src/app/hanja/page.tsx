@@ -64,20 +64,10 @@ export default function HanjaPage() {
 
 const CHONGNIU_RHYME_GROUPS = "支脂祭眞質仙薛宵侵緝鹽葉";
 const SEMI_CHONGNIU_RHYME_GROUPS = CHONGNIU_RHYME_GROUPS + "諄庚陌清昔幽";
-const CHONGNIU_INITIALS = [
-  "p",
-  "ph",
-  "b",
-  "m",
-  "k",
-  "kh",
-  "g",
-  "ng",
-  "'",
-  "x",
-  "h",
-];
-const TONES: { [key: string]: string } = { 平: "", 上: "X", 去: "H", 入: "" };
+// prettier-ignore
+const CHONGNIU_INITIALS = ["p", "ph", "b", "m", "k", "kh", "g", "ng", "'", "x", "h"];
+// prettier-ignore
+const TONES: { [key: string]: string } = {"平": "", "上": "X", "去": "H", "入": ""};
 
 export function MiddleChinesePronInfo({
   reading,

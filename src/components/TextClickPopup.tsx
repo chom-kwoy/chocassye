@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Card,
-  CircularProgress,
-  Divider,
-  Grid,
-  Typography,
-} from "@mui/material";
+import { CircularProgress, Divider, Grid, Typography } from "@mui/material";
 import Popover from "@mui/material/Popover";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
