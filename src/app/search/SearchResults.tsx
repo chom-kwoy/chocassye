@@ -407,7 +407,7 @@ function SearchResultsWrapper(props: SearchResultsProps) {
             <Typography variant="h6" sx={{ mb: 1 }}>
               <Trans i18nKey="no-search-term-title" t={t}>
                 Welcome to <strong>Chocassye</strong>, a Searchable Database of
-                Historical Korean Texts!
+                Historical Korean-Language Texts!
               </Trans>
             </Typography>
             <p>
