@@ -1,7 +1,7 @@
 "use server";
 
 import { Metadata } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import React from "react";
 
 import { DonationInfo } from "@/app/search/types";
@@ -68,10 +68,14 @@ export default async function Search({
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent") || "";
+  const isGoogleBot = userAgent.toLowerCase().includes("googlebot");
+
   let donationInfo: DonationInfo | null = null;
   const cookieStore = await cookies();
   const hasSeenModal = cookieStore.has("donationModalSeen");
-  if (!hasSeenModal) {
+  if (!isGoogleBot && !hasSeenModal) {
     try {
       donationInfo = await getBMCInfo();
     } catch (e) {
