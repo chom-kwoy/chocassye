@@ -71,6 +71,7 @@ export default async function Search({
   const headersList = await headers();
   const userAgent = headersList.get("user-agent") || "";
   const isGoogleBot = userAgent.toLowerCase().includes("googlebot");
+  console.log("User-Agent:", userAgent, "isGoogleBot:", isGoogleBot);
 
   let donationInfo: DonationInfo | null = null;
   const cookieStore = await cookies();
