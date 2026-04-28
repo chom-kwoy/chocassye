@@ -1,13 +1,12 @@
 "use server";
 
-import fs from "fs";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import React from "react";
 
-import { DONATIONS_FILE_PATH } from "@/app/api/webhook/bmc/constants";
-import { DonationInfo, Supporter } from "@/app/search/types";
+import { DonationInfo } from "@/app/search/types";
 import { getTranslation } from "@/components/detectLanguage";
+import { getBMCInfo } from "@/components/donationInfo";
 
 import { getStats, search } from "./search";
 import { SearchPageWrapper } from "./searchPageWrapper";
@@ -26,51 +25,42 @@ export async function generateMetadata({
         ? t("page-title")
         : t("page-title-with-searchTerm", { searchTerm: searchTerm }),
     description: t("page-description"),
+    keywords: [
+      "corpus",
+      "Middle Korean",
+      "Early Modern Korean",
+      "historical Korean",
+      "text database",
+      "search",
+      "database",
+      "Middle Korean text database",
+      "Early Modern Korean text database",
+      "historical Korean text database",
+      "search engine",
+      "search engine for Middle Korean",
+      "search engine for Early Modern Korean",
+      "search engine for historical Korean",
+      "search engine for Middle Korean text",
+      "search engine for Early Modern Korean text",
+      "search engine for historical Korean text",
+      "말뭉치",
+      "중세국어",
+      "중세 한국어",
+      "근대국어",
+      "근대 한국어",
+      "역사 말뭉치",
+      "국어사 자료",
+      "국어사 코퍼스",
+      "국어사 DB",
+      "검색",
+      "DB",
+      "데이터베이스",
+      "중세국어 검색",
+      "근대국어 검색",
+      "옛말 검색",
+      "옛말 자료",
+    ],
   };
-}
-
-async function getBMCInfo(): Promise<DonationInfo> {
-  // 1. Read from local file (Simulating DB)
-  let allSupporters: Supporter[] = [];
-
-  if (fs.existsSync(DONATIONS_FILE_PATH)) {
-    try {
-      const fileContent = fs.readFileSync(DONATIONS_FILE_PATH, "utf-8");
-      allSupporters = JSON.parse(fileContent);
-    } catch (error) {
-      console.error("Failed to read local donation data", error);
-    }
-  }
-
-  // 2. Reuse your exact filtering logic
-  const validSupporters = allSupporters.filter((supporter) => {
-    const supportDate = new Date(supporter.support_created_on);
-    const today = new Date();
-    const isFromThisMonth =
-      supportDate.getMonth() === today.getMonth() &&
-      supportDate.getFullYear() === today.getFullYear();
-
-    const amount =
-      parseFloat(supporter.support_coffee_price) * supporter.support_coffees;
-
-    return (
-      supporter.support_currency === "USD" &&
-      supporter.refunded_at === null &&
-      amount >= 1.0 &&
-      isFromThisMonth
-    );
-  });
-
-  // 3. Calculate Total
-  let totalDonations = 0;
-  validSupporters.forEach((supporter) => {
-    const amount =
-      parseFloat(supporter.support_coffee_price) * supporter.support_coffees;
-    totalDonations += amount;
-  });
-  console.log("totalDonations", totalDonations);
-
-  return { totalDonations, supporters: validSupporters };
 }
 
 export default async function Search({

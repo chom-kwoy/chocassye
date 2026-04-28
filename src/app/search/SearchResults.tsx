@@ -396,9 +396,35 @@ function SearchResultsWrapper(props: SearchResultsProps) {
 
       {/* Results area */}
       <Grid size={12}>
-        {filteredResultsList.length > 0 ? null : (
+        {props.resultTerm === "" ? (
           <div>
-            <Trans i18nKey="No match. Please follow the instructions below for better results." />
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              <Trans i18nKey="no-search-term-title" t={t}>
+                Welcome to <strong>Chocassye</strong>, a Searchable Database of
+                Historical Korean Texts!
+              </Trans>
+            </Typography>
+            <p>
+              <Trans i18nKey="no-search-term-content-1" t={t}>
+                Around 1,000 texts in Middle Korean and Early Modern Korean, as
+                well as early <em>interpretative gugyeol</em> (<em>kwukyel</em>)
+                are available for rapid search.
+              </Trans>
+            </p>
+            <p>
+              <Trans i18nKey="no-search-term-content-2" t={t}>
+                Please read and follow the instructions below for optimal usage.
+              </Trans>
+            </p>
+            <HowToPage title="" />
+          </div>
+        ) : filteredResultsList.length > 0 ? null : (
+          <div>
+            <Trans i18nKey="no-match" t={t} term={props.resultTerm}>
+              <strong>No match</strong> for query &lsquo;
+              {{ term: props.resultTerm }}
+              &rsquo;. Please follow the instructions below for better results.
+            </Trans>
             <HowToPage title="" />
           </div>
         )}
