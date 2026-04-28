@@ -167,6 +167,7 @@ function HistogramWrapper({
     }
   }
   if (stats === null || stats.status === "error") {
+    console.log(stats);
     return <div>Error loading histogram. Please try refreshing the page.</div>;
   }
   return <Histogram data={stats.histogram} setPage={setPage} pageN={pageN} />;
@@ -299,7 +300,7 @@ function SearchResultsWrapper(props: SearchResultsProps) {
   return (
     <React.Fragment>
       <Suspense
-        key={suspenseKey}
+        key={suspenseKey + "histogram"}
         fallback={
           <Grid size={12} container sx={{ position: "relative" }}>
             <Grid size={12}>
@@ -310,6 +311,7 @@ function SearchResultsWrapper(props: SearchResultsProps) {
                   position: "absolute",
                 }}
                 open={true}
+                appear={false}
               >
                 {t("Loading histogram...")}
                 <CircularProgress color="inherit" />
@@ -368,7 +370,7 @@ function SearchResultsWrapper(props: SearchResultsProps) {
       {/* Pager on top */}
       <Grid size={12}>
         <Suspense
-          key={suspenseKey}
+          key={suspenseKey + "pager-top"}
           fallback={
             <Backdrop
               sx={{
@@ -378,6 +380,7 @@ function SearchResultsWrapper(props: SearchResultsProps) {
                 position: "static",
               }}
               open={true}
+              appear={false}
             >
               {t("Loading pager...")}
               <CircularProgress color="inherit" />
@@ -440,7 +443,7 @@ function SearchResultsWrapper(props: SearchResultsProps) {
       {/* Pager on bottom */}
       <Grid size={12} marginTop={1}>
         <Suspense
-          key={suspenseKey}
+          key={suspenseKey + "pager-bottom"}
           fallback={
             <Backdrop
               sx={{
@@ -450,6 +453,7 @@ function SearchResultsWrapper(props: SearchResultsProps) {
                 position: "static",
               }}
               open={true}
+              appear={false}
             >
               {t("Loading pager...")}
               <CircularProgress color="inherit" />
