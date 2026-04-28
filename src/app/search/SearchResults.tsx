@@ -302,7 +302,11 @@ function SearchResultsWrapper(props: SearchResultsProps) {
       <Suspense
         key={suspenseKey + "histogram"}
         fallback={
-          <Grid size={12} container sx={{ position: "relative" }}>
+          <Grid
+            size={12}
+            container
+            sx={{ position: "relative", minHeight: 80 }}
+          >
             <Grid size={12}>
               <Backdrop
                 sx={{
@@ -313,8 +317,7 @@ function SearchResultsWrapper(props: SearchResultsProps) {
                 open={true}
                 appear={false}
               >
-                {t("Loading histogram...")}
-                <CircularProgress color="inherit" />
+                <CircularProgress color="inherit" /> {t("Loading histogram...")}
               </Backdrop>
             </Grid>
             <Grid size={12}>
@@ -382,8 +385,8 @@ function SearchResultsWrapper(props: SearchResultsProps) {
               open={true}
               appear={false}
             >
+              <CircularProgress color="inherit" size={24} />{" "}
               {t("Loading pager...")}
-              <CircularProgress color="inherit" />
             </Backdrop>
           }
         >

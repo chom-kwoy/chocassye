@@ -23,8 +23,10 @@ import DocSelector from "./DocSelector";
 
 function TotalNumberWrapper({
   statsPromise,
+  resultTerm,
 }: {
   statsPromise: Promise<StatsResult> | null;
+  resultTerm: string;
 }) {
   const { t } = useTranslation();
   const [cachedStats, setCachedStats] = useState<StatsResult | null>(null);
@@ -34,6 +36,9 @@ function TotalNumberWrapper({
     if (stats !== cachedStats) {
       setCachedStats(stats);
     }
+  }
+  if (resultTerm === "") {
+    return null;
   }
   if (stats === null || stats.status === "error") {
     return (
@@ -189,19 +194,20 @@ export function SearchPage(props: {
       </Grid>
 
       <Grid size={12}>
-        <Typography sx={{ fontSize: "1em", fontWeight: 600 }}>
+        <Typography sx={{ fontSize: "1em", fontWeight: 600 }} component="span">
           <Suspense fallback={<span>{t("Loading...")}</span>}>
-            <TotalNumberWrapper statsPromise={props.statsPromise} />
+            <TotalNumberWrapper
+              resultTerm={props.resultTerm}
+              statsPromise={props.statsPromise}
+            />
           </Suspense>
-          &ensp;
-          {props.result.length > 0 ? (
-            t("current page", {
-              startYear: props.result[0].year,
-              endYear: props.result[props.result.length - 1].year,
-            })
-          ) : (
-            <span></span>
-          )}
+          {props.result.length > 0
+            ? " " +
+              t("current page", {
+                startYear: props.result[0].year,
+                endYear: props.result[props.result.length - 1].year,
+              })
+            : null}
         </Typography>
       </Grid>
 

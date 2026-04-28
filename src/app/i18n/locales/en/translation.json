@@ -16,7 +16,7 @@
   "document name...": "Filter by document name...",
   "Exclude modern translations": "Exclude modern translations",
   "Ignore syllable separators": "Ignore separators",
-  "number Results": "{numResults, plural, =0 {No Results} =1 {1 Result} other {# Results}}",
+  "number Results": "{numResults, plural, =1 {1 Result} other {# Results}}",
   "number decade": "{decade}s",
   "current page": "(Current page: {startYear} — {endYear})",
   "nextpage": "Next Page ▶",
