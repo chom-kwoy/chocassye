@@ -70,7 +70,9 @@ export default async function Search({
 }) {
   const headersList = await headers();
   const userAgent = headersList.get("user-agent") || "";
-  const isGoogleBot = userAgent.toLowerCase().includes("googlebot");
+  const isGoogleBot =
+    userAgent.toLowerCase().includes("googlebot") ||
+    userAgent.toLowerCase().includes("google-inspectiontool");
   console.log("User-Agent:", userAgent, "isGoogleBot:", isGoogleBot);
 
   let donationInfo: DonationInfo | null = null;
