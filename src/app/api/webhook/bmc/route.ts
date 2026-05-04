@@ -5,8 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DONATIONS_FILE_PATH } from "@/app/api/webhook/bmc/constants";
 import { Supporter } from "@/app/search/types";
 
-// 1. Define the incoming Webhook Data Structure
-interface BMCWebhookData {
+interface BMCDonationWebhookData {
   id: number;
   amount: number;
   object: string;
@@ -16,7 +15,7 @@ interface BMCWebhookData {
   refunded: string; // "true" | "false"
   created_at: number; // Unix timestamp
   note_hidden: string; // "true" | "false"
-  refunded_at: number | null; // Note: In "refunded" event, this is a Unix timestamp (number)
+  refunded_at: number | null;
   support_note: string | null;
   support_type: string;
   supporter_name: string;
@@ -30,6 +29,22 @@ interface BMCWebhookData {
   coffee_price: number;
 }
 
+interface BMCMembershipWebhookData {
+  subscription_id: number;
+  payer_name: string;
+  payer_email: string;
+  subscription_coffee_price: string;
+  subscription_coffee_num: number;
+  subscription_currency: string;
+  subscription_current_period_start: string;
+  subscription_current_period_end: string;
+  subscription_created_on: string;
+  subscription_cancelled_on: string | null;
+  subscription_is_cancelled: boolean | string;
+  country: string;
+  transaction_id: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const signature = req.headers.get("x-signature-sha256");
@@ -37,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     let body: {
       type: string;
-      data: BMCWebhookData;
+      data: BMCDonationWebhookData | BMCMembershipWebhookData;
     };
 
     if (secret && signature) {
@@ -63,41 +78,55 @@ export async function POST(req: NextRequest) {
     const { type, data } = body;
 
     if (type === "donation.created") {
-      // 2. Map Webhook Data to your specific JSON Schema
-      const dateObj = new Date(data.created_at * 1000);
+      const d = data as BMCDonationWebhookData;
+      const dateObj = new Date(d.created_at * 1000);
       const formattedDate = dateObj
         .toISOString()
         .replace("T", " ")
         .substring(0, 19);
 
       const mappedSupporter: Supporter = {
-        support_id: data.id,
-        support_coffees: data.coffee_count,
-        transaction_id: data.transaction_id,
+        support_id: d.id,
+        support_coffees: d.coffee_count,
+        transaction_id: d.transaction_id,
         support_created_on: formattedDate,
-        supporter_name: data.supporter_name || "Anonymous",
-        support_coffee_price: data.coffee_price.toFixed(4),
-        support_currency: data.currency,
+        supporter_name: d.supporter_name || "Anonymous",
+        support_coffee_price: d.coffee_price.toFixed(4),
+        support_currency: d.currency,
         country: "Unknown",
-        refunded_at: null, // New donations aren't refunded yet
+        refunded_at: null,
       };
 
-      saveDonation(mappedSupporter);
-    }
-
-    // 3. Handle Refund Event
-    else if (type === "donation.refunded") {
-      // Convert unix timestamp to string format if it exists
+      upsertDonation(mappedSupporter);
+    } else if (type === "donation.refunded") {
+      const d = data as BMCDonationWebhookData;
       let formattedRefundDate = null;
-      if (data.refunded_at) {
-        const dateObj = new Date(data.refunded_at * 1000);
+      if (d.refunded_at) {
+        const dateObj = new Date(d.refunded_at * 1000);
         formattedRefundDate = dateObj
           .toISOString()
           .replace("T", " ")
           .substring(0, 19);
       }
-
-      updateRefundStatus(data.transaction_id, formattedRefundDate);
+      updateRefundStatus(d.transaction_id, formattedRefundDate);
+    } else if (type === "membership.created" || type === "membership.updated") {
+      const d = data as BMCMembershipWebhookData;
+      const mappedSubscriber: Supporter = {
+        support_id: d.subscription_id,
+        transaction_id: `sub_${d.subscription_id}`,
+        support_coffee_price: d.subscription_coffee_price,
+        support_coffees: d.subscription_coffee_num,
+        support_currency: d.subscription_currency,
+        supporter_name: d.payer_name || "Anonymous",
+        support_created_on: d.subscription_current_period_start,
+        subscription_period_end: d.subscription_current_period_end,
+        refunded_at: null,
+        country: d.country ?? "Unknown",
+      };
+      upsertDonation(mappedSubscriber);
+    } else if (type === "membership.cancelled") {
+      const d = data as BMCMembershipWebhookData;
+      removeDonation(`sub_${d.subscription_id}`);
     }
 
     return NextResponse.json({ success: true });
@@ -110,57 +139,56 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function saveDonation(newSupporter: Supporter) {
-  let supporters: Supporter[] = [];
-
-  if (fs.existsSync(DONATIONS_FILE_PATH)) {
-    const fileContent = fs.readFileSync(DONATIONS_FILE_PATH, "utf-8");
-    try {
-      supporters = JSON.parse(fileContent);
-    } catch (e) {
-      console.error("Error parsing donations file, starting fresh.", e);
-    }
-  }
-
-  // Deduplication check
-  const exists = supporters.some(
-    (s) => s.transaction_id === newSupporter.transaction_id,
-  );
-
-  if (!exists) {
-    supporters.push(newSupporter);
-    fs.writeFileSync(DONATIONS_FILE_PATH, JSON.stringify(supporters, null, 2));
-    console.log(`Saved new donation from ${newSupporter.supporter_name}`);
+function readDonations(): Supporter[] {
+  if (!fs.existsSync(DONATIONS_FILE_PATH)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(DONATIONS_FILE_PATH, "utf-8"));
+  } catch (e) {
+    console.error("Error parsing donations file, starting fresh.", e);
+    return [];
   }
 }
 
-// Helper to find and update existing record
-function updateRefundStatus(transactionId: string, refundedAt: string | null) {
-  if (!fs.existsSync(DONATIONS_FILE_PATH)) return;
+function writeDonations(supporters: Supporter[]) {
+  fs.writeFileSync(DONATIONS_FILE_PATH, JSON.stringify(supporters, null, 2));
+}
 
-  try {
-    const fileContent = fs.readFileSync(DONATIONS_FILE_PATH, "utf-8");
-    const supporters: Supporter[] = JSON.parse(fileContent);
+function upsertDonation(record: Supporter) {
+  const supporters = readDonations();
+  const index = supporters.findIndex(
+    (s) => s.transaction_id === record.transaction_id,
+  );
+  if (index !== -1) {
+    supporters[index] = record;
+    console.log(`Updated record for ${record.supporter_name}`);
+  } else {
+    supporters.push(record);
+    console.log(`Saved new donation from ${record.supporter_name}`);
+  }
+  writeDonations(supporters);
+}
 
-    // Find the donation
-    const index = supporters.findIndex(
-      (s) => s.transaction_id === transactionId,
+function removeDonation(transactionId: string) {
+  const supporters = readDonations();
+  const filtered = supporters.filter((s) => s.transaction_id !== transactionId);
+  if (filtered.length < supporters.length) {
+    writeDonations(filtered);
+    console.log(`Removed subscription: ${transactionId}`);
+  } else {
+    console.warn(
+      `Cancellation received for unknown subscription: ${transactionId}`,
     );
+  }
+}
 
-    if (index !== -1) {
-      // Update only the refunded_at field
-      supporters[index].refunded_at = refundedAt;
-
-      // Save back to file
-      fs.writeFileSync(
-        DONATIONS_FILE_PATH,
-        JSON.stringify(supporters, null, 2),
-      );
-      console.log(`Updated refund status for transaction: ${transactionId}`);
-    } else {
-      console.warn(`Refund received for unknown transaction: ${transactionId}`);
-    }
-  } catch (e) {
-    console.error("Error updating refund status:", e);
+function updateRefundStatus(transactionId: string, refundedAt: string | null) {
+  const supporters = readDonations();
+  const index = supporters.findIndex((s) => s.transaction_id === transactionId);
+  if (index !== -1) {
+    supporters[index].refunded_at = refundedAt;
+    writeDonations(supporters);
+    console.log(`Updated refund status for transaction: ${transactionId}`);
+  } else {
+    console.warn(`Refund received for unknown transaction: ${transactionId}`);
   }
 }

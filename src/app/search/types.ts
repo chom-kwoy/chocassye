@@ -8,6 +8,8 @@ export type Supporter = {
   refunded_at: string | null;
   support_created_on: string; // e.g. '2026-01-27 13:27:06'
   support_coffees: number;
+  // Present only for subscribers; used to check if period covers current month
+  subscription_period_end?: string;
 };
 
 export type DonationInfo = {

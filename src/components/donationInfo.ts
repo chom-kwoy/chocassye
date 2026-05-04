@@ -16,22 +16,31 @@ export async function getBMCInfo(): Promise<DonationInfo> {
     }
   }
 
-  // 2. Reuse your exact filtering logic
-  const validSupporters = allSupporters.filter((supporter) => {
-    const supportDate = new Date(supporter.support_created_on);
-    const today = new Date();
-    const isFromThisMonth =
-      supportDate.getMonth() === today.getMonth() &&
-      supportDate.getFullYear() === today.getFullYear();
+  // 2. Filter to current month's contributions
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
+  const validSupporters = allSupporters.filter((supporter) => {
     const amount =
       parseFloat(supporter.support_coffee_price) * supporter.support_coffees;
 
+    if (
+      supporter.support_currency !== "USD" ||
+      supporter.refunded_at !== null ||
+      amount < 1.0
+    )
+      return false;
+
+    if (supporter.subscription_period_end) {
+      // Subscriber: active if their current period overlaps the current month
+      return new Date(supporter.subscription_period_end) > monthStart;
+    }
+
+    // One-time: must be from this calendar month
+    const supportDate = new Date(supporter.support_created_on);
     return (
-      supporter.support_currency === "USD" &&
-      supporter.refunded_at === null &&
-      amount >= 1.0 &&
-      isFromThisMonth
+      supportDate.getMonth() === today.getMonth() &&
+      supportDate.getFullYear() === today.getFullYear()
     );
   });
 
