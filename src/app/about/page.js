@@ -26,7 +26,7 @@ export default async function About() {
 
       <Box>
         <Typography component="p" variant="body2" sx={{ pb: 2 }}>
-          國語之根深, 從古有以文記
+          國語之根深, 自古有以文記
           <br />
           나라의 말씀이 뿌리가 깊건마는, 예로부터 문자로 기록된 것이 있어도,
         </Typography>
