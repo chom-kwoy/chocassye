@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 
 import { darkTheme, lightTheme } from "@/app/themes";
+import { useDonationModal } from "@/components/DonationContext";
 import {
   TranslationContext,
   useTranslation,
@@ -40,6 +41,7 @@ function App(props) {
   const router = useRouter();
 
   const [curTheme, setCurTheme] = React.useContext(ThemeContext);
+  const { openDonationModal } = useDonationModal();
 
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElLang, setAnchorElLang] = React.useState(null);
@@ -341,8 +343,7 @@ function App(props) {
             </Typography>
             <Button
               variant="contained"
-              href="https://buymeacoffee.com/chomkwoy"
-              target="_blank"
+              onClick={openDonationModal}
               startIcon={<LocalCafeIcon />}
               sx={{
                 borderRadius: 50,

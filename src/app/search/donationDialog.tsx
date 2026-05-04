@@ -20,19 +20,21 @@ import {
   useTheme,
 } from "@mui/material";
 import { setCookie } from "cookies-next";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 import { DonationInfo } from "@/app/search/types";
 import { useTranslation } from "@/components/TranslationProvider";
 
 export default function DonationModal({
+  open,
+  onClose,
   donationInfo,
 }: {
+  open: boolean;
+  onClose: () => void;
   donationInfo: DonationInfo;
 }) {
   const { t } = useTranslation();
-
-  const [open, setOpen] = useState(false);
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("xs"));
@@ -40,21 +42,13 @@ export default function DonationModal({
   // Configuration
   const monthlyGoal = 50;
 
-  // 1. Auto-open logic
-  useEffect(() => {
-    const hasSeen = localStorage.getItem("hasSeenDonationModal");
-    if (!hasSeen) {
-      const timer = setTimeout(() => setOpen(true), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
   const handleClose = () => {
     setCookie("donationModalSeen", "true", {
       maxAge: 60 * 60 * 24 * 30, // 30 days in seconds
       path: "/",
     });
-    setOpen(false);
+    localStorage.setItem("hasSeenDonationModal", "true");
+    onClose();
   };
 
   // Calculate progress

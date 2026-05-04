@@ -4,9 +4,7 @@ import { Metadata } from "next";
 import { cookies, headers } from "next/headers";
 import React from "react";
 
-import { DonationInfo } from "@/app/search/types";
 import { getTranslation } from "@/components/detectLanguage";
-import { getBMCInfo } from "@/components/donationInfo";
 
 import { getStats, search } from "./search";
 import { SearchPageWrapper } from "./searchPageWrapper";
@@ -75,16 +73,9 @@ export default async function Search({
     userAgent.toLowerCase().includes("google-inspectiontool");
   console.log("User-Agent:", userAgent, "isGoogleBot:", isGoogleBot);
 
-  let donationInfo: DonationInfo | null = null;
   const cookieStore = await cookies();
   const hasSeenModal = cookieStore.has("donationModalSeen");
-  if (!isGoogleBot && !hasSeenModal) {
-    try {
-      donationInfo = await getBMCInfo();
-    } catch (e) {
-      console.error("Failed to retrieve BMC info", e);
-    }
-  }
+  const showDonationDialog = !isGoogleBot && !hasSeenModal;
 
   const params = await searchParams;
   const query = {
@@ -110,7 +101,7 @@ export default async function Search({
           ignoreSep: query.ignoreSep,
         }}
         statsPromise={statsPromise}
-        donationInfo={donationInfo}
+        showDonationDialog={showDonationDialog}
       />
     );
   } else {

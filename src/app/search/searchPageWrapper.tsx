@@ -3,8 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
-import DonationModal from "@/app/search/donationDialog";
-import { DonationInfo } from "@/app/search/types";
+import { useDonationModal } from "@/components/DonationContext";
 import { TextClickPopup } from "@/components/TextClickPopup";
 
 import { Book, SearchQuery, StatsResult } from "./search";
@@ -43,7 +42,7 @@ function makeSearchParams(query: SearchQuery): URLSearchParams {
 export function SearchPageWrapper({
   result,
   statsPromise,
-  donationInfo,
+  showDonationDialog,
 }: {
   result: {
     loaded: boolean;
@@ -56,9 +55,10 @@ export function SearchPageWrapper({
     ignoreSep: boolean;
   };
   statsPromise: Promise<StatsResult>;
-  donationInfo: DonationInfo | null;
+  showDonationDialog: boolean;
 }) {
   const router = useRouter();
+  const { openDonationModal } = useDonationModal();
   const [isPending, startTransition] = React.useTransition();
 
   const searchParams = useSearchParams();
@@ -75,6 +75,12 @@ export function SearchPageWrapper({
     const newParams = parseSearchParams(searchParams);
     setQuery(newParams);
   }, [searchParams]);
+
+  React.useEffect(() => {
+    if (!showDonationDialog) return;
+    const timer = setTimeout(openDonationModal, 3000);
+    return () => clearTimeout(timer);
+  }, [showDonationDialog, openDonationModal]);
 
   const refresh = React.useCallback(
     (query: SearchQuery) => {
@@ -160,7 +166,6 @@ export function SearchPageWrapper({
         // Callbacks
         onRefresh={forceRefreshResults}
       />
-      {donationInfo && <DonationModal donationInfo={donationInfo} />}
     </TextClickPopup>
   );
 }
