@@ -32,7 +32,7 @@ export default async function About() {
         </Typography>
 
         <Typography component="p" variant="body2" sx={{ pb: 2 }}>
-          乎罔易探之法淺
+          乎網易探之法淺
           <br />
           웹에서 쉽게 검색하는 방법이 변변치 아니하여,
         </Typography>
