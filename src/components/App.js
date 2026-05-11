@@ -1,16 +1,19 @@
 "use client";
 
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import CollectionsBookmarkIcon from "@mui/icons-material/CollectionsBookmark";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LanguageIcon from "@mui/icons-material/Language";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
+import LoginIcon from "@mui/icons-material/Login";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
   AppBar,
   Box,
   Button,
   Container,
+  Divider,
   FormControl,
   IconButton,
   InputLabel,
@@ -22,6 +25,7 @@ import {
   Typography,
 } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -43,8 +47,11 @@ function App(props) {
   const [curTheme, setCurTheme] = React.useContext(ThemeContext);
   const { openDonationModal } = useDonationModal();
 
+  const { data: session, status } = useSession();
+
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElLang, setAnchorElLang] = React.useState(null);
+  const [anchorElAccount, setAnchorElAccount] = React.useState(null);
 
   function handleOpenNavMenu(event) {
     setAnchorElNav(event.currentTarget);
@@ -147,6 +154,50 @@ function App(props) {
                   {t("About")}
                 </Button>
               </Box>
+              {/* Login / account button — desktop */}
+              {status !== "loading" && (
+                <Box sx={{ display: { xs: "none", md: "flex" } }}>
+                  {session?.user ? (
+                    <>
+                      <IconButton
+                        size="large"
+                        color="inherit"
+                        onClick={(e) => setAnchorElAccount(e.currentTarget)}
+                      >
+                        <AccountCircleIcon />
+                      </IconButton>
+                      <Menu
+                        anchorEl={anchorElAccount}
+                        open={Boolean(anchorElAccount)}
+                        onClose={() => setAnchorElAccount(null)}
+                      >
+                        <MenuItem disabled>
+                          <Typography variant="body2">
+                            {session.user.name || session.user.email}
+                          </Typography>
+                        </MenuItem>
+                        <Divider />
+                        <MenuItem
+                          onClick={() => {
+                            setAnchorElAccount(null);
+                            signOut({ callbackUrl: "/search" });
+                          }}
+                        >
+                          Sign out
+                        </MenuItem>
+                      </Menu>
+                    </>
+                  ) : (
+                    <IconButton
+                      size="large"
+                      color="inherit"
+                      onClick={() => router.push("/login")}
+                    >
+                      <LoginIcon />
+                    </IconButton>
+                  )}
+                </Box>
+              )}
               <Box sx={{ display: { xs: "none", md: "flex" } }}>
                 <IconButton
                   size="large"
@@ -254,6 +305,50 @@ function App(props) {
                 </Box>
               </Typography>
 
+              {/* Login / account button — mobile */}
+              {status !== "loading" && (
+                <Box sx={{ display: { xs: "flex", md: "none" } }}>
+                  {session?.user ? (
+                    <>
+                      <IconButton
+                        size="large"
+                        color="inherit"
+                        onClick={(e) => setAnchorElAccount(e.currentTarget)}
+                      >
+                        <AccountCircleIcon />
+                      </IconButton>
+                      <Menu
+                        anchorEl={anchorElAccount}
+                        open={Boolean(anchorElAccount)}
+                        onClose={() => setAnchorElAccount(null)}
+                      >
+                        <MenuItem disabled>
+                          <Typography variant="body2">
+                            {session.user.name || session.user.email}
+                          </Typography>
+                        </MenuItem>
+                        <Divider />
+                        <MenuItem
+                          onClick={() => {
+                            setAnchorElAccount(null);
+                            signOut({ callbackUrl: "/search" });
+                          }}
+                        >
+                          Sign out
+                        </MenuItem>
+                      </Menu>
+                    </>
+                  ) : (
+                    <IconButton
+                      size="large"
+                      color="inherit"
+                      onClick={() => router.push("/login")}
+                    >
+                      <LoginIcon />
+                    </IconButton>
+                  )}
+                </Box>
+              )}
               <Box sx={{ display: { xs: "flex", md: "none" } }}>
                 <IconButton
                   size="large"

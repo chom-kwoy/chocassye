@@ -7,6 +7,7 @@ import { cookies, headers } from "next/headers";
 import React from "react";
 
 import App from "@/components/App";
+import AuthProvider from "@/components/AuthProvider";
 import { DonationProvider } from "@/components/DonationContext";
 import DarkLightThemeProvider from "@/components/ThemeContext";
 import { TranslationProvider } from "@/components/TranslationProvider";
@@ -54,13 +55,15 @@ export default async function Layout({
       <body>
         <AppRouterCacheProvider>
           <div id="root">
-            <TranslationProvider defaultLng={lng}>
-              <DarkLightThemeProvider initialThemeType={theme}>
-                <DonationProvider donationInfo={donationInfo}>
-                  <App>{children}</App>
-                </DonationProvider>
-              </DarkLightThemeProvider>
-            </TranslationProvider>
+            <AuthProvider>
+              <TranslationProvider defaultLng={lng}>
+                <DarkLightThemeProvider initialThemeType={theme}>
+                  <DonationProvider donationInfo={donationInfo}>
+                    <App>{children}</App>
+                  </DonationProvider>
+                </DarkLightThemeProvider>
+              </TranslationProvider>
+            </AuthProvider>
           </div>
         </AppRouterCacheProvider>
       </body>

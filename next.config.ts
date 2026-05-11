@@ -7,12 +7,19 @@ const nextConfig: NextConfig = {
     root: path.resolve(__dirname),
   },
   async rewrites() {
-    return [
-      {
-        source: "/api/:path*", // get everything after /api/
-        destination: `http://localhost:5000/api/:path*`, // send it to your API
-      },
-    ];
+    return {
+      beforeFiles: [],
+      afterFiles: [],
+      // fallback runs after all Next.js route handlers, so /api/auth/* and
+      // /api/webhook/* are served by Next.js; everything else falls through
+      // to the backend at localhost:5000.
+      fallback: [
+        {
+          source: "/api/:path*",
+          destination: `http://localhost:5000/api/:path*`,
+        },
+      ],
+    };
   },
   images: {
     remotePatterns: [new URL("https://*.backblazeb2.com/**")],
