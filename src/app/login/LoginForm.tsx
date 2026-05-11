@@ -18,9 +18,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
+import { useTranslation } from "@/components/TranslationProvider";
+
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [remember, setRemember] = React.useState(false);
@@ -44,7 +47,7 @@ export default function LoginForm() {
     });
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError(t("Invalid email or password"));
       setLoading(false);
     } else {
       router.push(callbackUrl);
@@ -56,12 +59,12 @@ export default function LoginForm() {
     <Box sx={{ maxWidth: 400, mx: "auto", mt: 4, px: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
         <LoginIcon />
-        <Typography variant="h4">Sign in</Typography>
+        <Typography variant="h4">{t("Sign in")}</Typography>
       </Box>
 
       {registered && (
         <Alert severity="success" sx={{ mb: 2 }}>
-          Account created! You can now sign in.
+          {t("Account created! You can now sign in.")}
         </Alert>
       )}
 
@@ -69,14 +72,14 @@ export default function LoginForm() {
         <Alert severity="error" sx={{ mb: 2 }}>
           {error ||
             (urlError === "OAuthAccountNotLinked"
-              ? "This email is registered with a different sign-in method."
-              : "An error occurred. Please try again.")}
+              ? t("This email is registered with a different sign-in method.")
+              : t("An error occurred. Please try again."))}
         </Alert>
       )}
 
       <Stack spacing={2} component="form" onSubmit={handleSubmit}>
         <TextField
-          label="Email"
+          label={t("Email")}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -85,7 +88,7 @@ export default function LoginForm() {
           autoComplete="email"
         />
         <TextField
-          label="Password"
+          label={t("Password")}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -100,7 +103,7 @@ export default function LoginForm() {
               onChange={(e) => setRemember(e.target.checked)}
             />
           }
-          label="Keep me signed in"
+          label={t("Keep me signed in")}
         />
         <Button
           type="submit"
@@ -109,11 +112,11 @@ export default function LoginForm() {
           disabled={loading}
           size="large"
         >
-          {loading ? "Signing in…" : "Sign in"}
+          {loading ? t("Signing in…") : t("Sign in")}
         </Button>
       </Stack>
 
-      <Divider sx={{ my: 3 }}>or</Divider>
+      <Divider sx={{ my: 3 }}>{t("or")}</Divider>
 
       <Button
         variant="outlined"
@@ -122,13 +125,13 @@ export default function LoginForm() {
         startIcon={<GoogleIcon />}
         onClick={() => signIn("google", { callbackUrl })}
       >
-        Sign in with Google
+        {t("Sign in with Google")}
       </Button>
 
       <Typography sx={{ mt: 3, textAlign: "center" }} variant="body2">
-        Don&apos;t have an account?{" "}
+        {t("Don't have an account?")}{" "}
         <Link href="/register" style={{ fontWeight: 600 }}>
-          Register
+          {t("Register")}
         </Link>
       </Typography>
     </Box>

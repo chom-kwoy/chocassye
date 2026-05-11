@@ -183,7 +183,7 @@ function App(props) {
                             signOut({ callbackUrl: "/search" });
                           }}
                         >
-                          Sign out
+                          {t("Sign out")}
                         </MenuItem>
                       </Menu>
                     </>
@@ -334,7 +334,7 @@ function App(props) {
                             signOut({ callbackUrl: "/search" });
                           }}
                         >
-                          Sign out
+                          {t("Sign out")}
                         </MenuItem>
                       </Menu>
                     </>

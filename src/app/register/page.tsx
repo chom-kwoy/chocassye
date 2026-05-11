@@ -13,8 +13,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 
+import { useTranslation } from "@/components/TranslationProvider";
+
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -27,7 +30,7 @@ export default function RegisterPage() {
     setError(null);
 
     if (password !== confirm) {
-      setError("Passwords do not match");
+      setError(t("Passwords do not match"));
       return;
     }
 
@@ -40,7 +43,7 @@ export default function RegisterPage() {
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error || "Registration failed");
+      setError(data.error || t("Registration failed"));
       setLoading(false);
     } else {
       router.push("/login?registered=1");
@@ -51,7 +54,7 @@ export default function RegisterPage() {
     <Box sx={{ maxWidth: 400, mx: "auto", mt: 4, px: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
         <PersonAddIcon />
-        <Typography variant="h4">Create account</Typography>
+        <Typography variant="h4">{t("Create account")}</Typography>
       </Box>
 
       {error && (
@@ -62,14 +65,14 @@ export default function RegisterPage() {
 
       <Stack spacing={2} component="form" onSubmit={handleSubmit}>
         <TextField
-          label="Name"
+          label={t("Name")}
           value={name}
           onChange={(e) => setName(e.target.value)}
           fullWidth
           autoComplete="name"
         />
         <TextField
-          label="Email"
+          label={t("Email")}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -78,17 +81,17 @@ export default function RegisterPage() {
           autoComplete="email"
         />
         <TextField
-          label="Password"
+          label={t("Password")}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
           fullWidth
-          helperText="At least 8 characters"
+          helperText={t("At least 8 characters")}
           autoComplete="new-password"
         />
         <TextField
-          label="Confirm password"
+          label={t("Confirm password")}
           type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
@@ -103,14 +106,14 @@ export default function RegisterPage() {
           size="large"
           disabled={loading}
         >
-          {loading ? "Creating account…" : "Create account"}
+          {loading ? t("Creating account…") : t("Create account")}
         </Button>
       </Stack>
 
       <Typography sx={{ mt: 3, textAlign: "center" }} variant="body2">
-        Already have an account?{" "}
+        {t("Already have an account?")}{" "}
         <Link href="/login" style={{ fontWeight: 600 }}>
-          Sign in
+          {t("Sign in")}
         </Link>
       </Typography>
     </Box>
