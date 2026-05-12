@@ -77,5 +77,7 @@
   "Delete": "Delete",
   "No bookmarks yet": "No bookmarks yet",
   "Cancel": "Cancel",
+  "Delete category": "Delete category",
+  "Delete category confirm": "Delete the category \"{name}\" and all its bookmarks?",
   "page-title-bookmarks": "Bookmarks - Chocassye"
 }

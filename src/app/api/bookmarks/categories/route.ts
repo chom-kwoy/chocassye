@@ -35,6 +35,26 @@ export async function GET() {
   return NextResponse.json(result.rows);
 }
 
+export async function DELETE(request: NextRequest) {
+  const userId = await getUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const categoryId = request.nextUrl.searchParams.get("categoryId");
+  if (!categoryId) {
+    return NextResponse.json({ error: "categoryId required" }, { status: 400 });
+  }
+
+  const pool = await getPool();
+  await pool.query(
+    `DELETE FROM bookmark_categories WHERE id = $1 AND user_id = $2`,
+    [parseInt(categoryId, 10), userId],
+  );
+
+  return NextResponse.json({ success: true });
+}
+
 export async function POST(request: NextRequest) {
   const userId = await getUserId();
   if (!userId) {

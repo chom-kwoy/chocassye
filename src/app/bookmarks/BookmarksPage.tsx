@@ -1,6 +1,7 @@
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Box,
@@ -166,6 +167,7 @@ export function BookmarksPage({
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [newName, setNewName] = React.useState("");
   const [creating, setCreating] = React.useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
 
   const selectedCategory = categories[selectedTab];
 
@@ -198,6 +200,17 @@ export function BookmarksPage({
     setCreating(false);
     setDialogOpen(false);
     setNewName("");
+  }
+
+  async function handleDeleteCategory() {
+    if (!selectedCategory) return;
+    await fetch(`/api/bookmarks/categories?categoryId=${selectedCategory.id}`, {
+      method: "DELETE",
+    });
+    const next = categories.filter((c) => c.id !== selectedCategory.id);
+    setCategories(next);
+    setSelectedTab(Math.min(selectedTab, next.length - 1));
+    setDeleteConfirmOpen(false);
   }
 
   function handleDelete(sentenceId: number, categoryId: number) {
@@ -258,26 +271,62 @@ export function BookmarksPage({
         </DialogActions>
       </Dialog>
 
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+      >
+        <DialogTitle>{t("Delete category")}</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {t("Delete category confirm", {
+              name: selectedCategory?.name ?? "",
+            })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>
+            {t("Cancel")}
+          </Button>
+          <Button
+            onClick={handleDeleteCategory}
+            color="error"
+            variant="contained"
+          >
+            {t("Delete")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {categories.length === 0 ? (
         <Typography color="text.secondary">{t("No bookmarks yet")}</Typography>
       ) : (
         <>
-          <Tabs
-            value={selectedTab}
-            onChange={(_, v) => {
-              if (v === categories.length) {
-                setDialogOpen(true);
-              } else {
-                setSelectedTab(v);
-              }
-            }}
-            sx={{ mb: 1 }}
-          >
-            {categories.map((cat) => (
-              <Tab key={cat.id} label={cat.name} />
-            ))}
-            <Tab icon={<AddIcon />} sx={{ minWidth: 48 }} />
-          </Tabs>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Tabs
+              value={selectedTab}
+              onChange={(_, v) => {
+                if (v === categories.length) {
+                  setDialogOpen(true);
+                } else {
+                  setSelectedTab(v);
+                }
+              }}
+              sx={{ flexGrow: 1, mb: 1 }}
+            >
+              {categories.map((cat) => (
+                <Tab key={cat.id} label={cat.name} />
+              ))}
+              <Tab icon={<AddIcon />} sx={{ minWidth: 48 }} />
+            </Tabs>
+            <IconButton
+              size="small"
+              onClick={() => setDeleteConfirmOpen(true)}
+              title={t("Delete category")}
+              sx={{ mb: 1, ml: 1 }}
+            >
+              <DeleteOutlineIcon fontSize="small" />
+            </IconButton>
+          </Box>
           <Divider />
 
           <Box

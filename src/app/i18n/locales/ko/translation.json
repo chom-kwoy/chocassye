@@ -113,5 +113,7 @@
   "Delete": "삭제",
   "No bookmarks yet": "북마크가 없습니다",
   "Cancel": "취소",
+  "Delete category": "카테고리 삭제",
+  "Delete category confirm": "카테고리 \"{name}\"와 그 안의 북마크를 모두 삭제할까요?",
   "page-title-bookmarks": "북마크 - ᄎᆞ자쎠"
 }
