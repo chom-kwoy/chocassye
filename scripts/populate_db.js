@@ -14,7 +14,6 @@ async function populate_db(database_name, doc_cnt) {
     password: "password",
   });
 
-  // drop tables `books` and `sentences`
   const pool = await startPool
     .query(
       `
@@ -42,6 +41,7 @@ async function populate_db(database_name, doc_cnt) {
       console.error(err);
     });
 
+  // drop tables `books` and `sentences`
   return pool
     .query("DROP TABLE IF EXISTS books, sentences, images CASCADE;")
     .then(() => {

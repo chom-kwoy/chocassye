@@ -58,6 +58,7 @@ export async function search(
     const page = query.page ?? 1;
     const offset = (page - 1) * PAGE_N;
 
+    await client.query("SET jit = off");
     const results = await makeCorpusQuery(
       client,
       query.term,
@@ -177,6 +178,7 @@ export async function getStats(query: SearchQuery): Promise<StatsResult> {
 
     console.log("Stats query= ", queryString);
 
+    await client.query("SET jit = off");
     const results = await client.query(queryString);
 
     const elapsed = new Date().getTime() - beginTime.getTime();
