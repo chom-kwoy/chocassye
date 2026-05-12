@@ -57,6 +57,7 @@ export function SentenceWithCtx(props: {
   highlightTerm: string;
   ignoreSep: boolean;
   romanize: boolean;
+  showBookmark?: boolean;
 }) {
   const { t } = useTranslation();
   const [curTheme, _] = React.useContext(ThemeContext);
@@ -201,21 +202,23 @@ export function SentenceWithCtx(props: {
           "&:hover .bookmark-btn": { visibility: "visible" },
         }}
       >
-        <Box
-          sx={{
-            position: "absolute",
-            left: 0,
-            top: "50%",
-            transform: "translate(-100%, -50%)",
-          }}
-        >
-          <BookmarkButton
-            sentenceId={props.sentenceWithCtx.mainSentence.id}
-            initiallyBookmarked={
-              props.sentenceWithCtx.mainSentence.is_bookmarked ?? false
-            }
-          />
-        </Box>
+        {(props.showBookmark ?? true) && (
+          <Box
+            sx={{
+              position: "absolute",
+              left: 0,
+              top: "50%",
+              transform: "translate(-100%, -50%)",
+            }}
+          >
+            <BookmarkButton
+              sentenceId={props.sentenceWithCtx.mainSentence.id}
+              initiallyBookmarked={
+                props.sentenceWithCtx.mainSentence.is_bookmarked ?? false
+              }
+            />
+          </Box>
+        )}
         <SentenceAndPage
           sentence={props.sentenceWithCtx.mainSentence}
           book={props.book}

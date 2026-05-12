@@ -72,5 +72,10 @@
   "New category…": "New category…",
   "Add": "Add",
   "Favorites": "Favorites",
-  "Add bookmark to…": "Add bookmark to…"
+  "Add bookmark to…": "Add bookmark to…",
+  "My Bookmarks": "My Bookmarks",
+  "Delete": "Delete",
+  "No bookmarks yet": "No bookmarks yet",
+  "Cancel": "Cancel",
+  "page-title-bookmarks": "Bookmarks - Chocassye"
 }

@@ -11,7 +11,6 @@ import {
   Table,
   TableBody,
   TableContainer,
-  Tooltip,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -27,6 +26,7 @@ import Histogram from "@/components/Histogram";
 import HowToPage from "@/components/HowToPage";
 import { useTranslation } from "@/components/TranslationProvider";
 import { yale_to_hangul } from "@/components/YaleToHangul.mjs";
+import { YearCell } from "@/components/YearCell";
 import {
   StyledTableCell,
   StyledTableRow,
@@ -66,23 +66,12 @@ function SearchResultsList(props: {
               {props.filteredResults.map((book, i) => (
                 <StyledTableRow key={i}>
                   {/* Year column */}
-                  <StyledTableCell
-                    component="th"
-                    scope="row"
-                    sx={{ verticalAlign: "top" }}
-                  >
-                    <Grid sx={{ py: 0.4 }}>
-                      <Tooltip title={book.year_string}>
-                        <Box>
-                          {book.year === null
-                            ? t("Unknown year")
-                            : book.year_end - book.year_start > 0
-                              ? "c.\u00a0" + book.year
-                              : book.year}
-                        </Box>
-                      </Tooltip>
-                    </Grid>
-                  </StyledTableCell>
+                  <YearCell
+                    year={book.year}
+                    yearStart={book.year_start}
+                    yearEnd={book.year_end}
+                    yearString={book.year_string}
+                  />
 
                   {/* Sentences column */}
                   <StyledTableCell>

@@ -180,6 +180,14 @@ function App(props) {
                         <MenuItem
                           onClick={() => {
                             setAnchorElAccount(null);
+                            router.push("/bookmarks");
+                          }}
+                        >
+                          {t("My Bookmarks")}
+                        </MenuItem>
+                        <MenuItem
+                          onClick={() => {
+                            setAnchorElAccount(null);
                             signOut({ callbackUrl: "/search" });
                           }}
                         >
@@ -328,6 +336,14 @@ function App(props) {
                           </Typography>
                         </MenuItem>
                         <Divider />
+                        <MenuItem
+                          onClick={() => {
+                            setAnchorElAccount(null);
+                            router.push("/bookmarks");
+                          }}
+                        >
+                          {t("My Bookmarks")}
+                        </MenuItem>
                         <MenuItem
                           onClick={() => {
                             setAnchorElAccount(null);
