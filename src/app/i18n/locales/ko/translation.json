@@ -94,7 +94,7 @@
   "or": "또는",
   "Confirm password": "비밀번호 확인",
   "At least 8 characters": "8자 이상",
-  "Creating account…": "계정 생성 중…",
+  "Creating account…": "계정 생성 중...",
   "Passwords do not match": "비밀번호가 일치하지 않습니다",
   "Registration failed": "회원가입에 실패했습니다",
   "Already have an account?": "이미 계정이 있으신가요?",
@@ -102,5 +102,11 @@
   "Invalid email or password": "이메일 또는 비밀번호가 잘못되었습니다",
   "Account created! You can now sign in.": "계정이 생성되었습니다! 이제 로그인하실 수 있습니다.",
   "This email is registered with a different sign-in method.": "이 이메일은 다른 로그인 방법으로 등록되어 있습니다.",
-  "An error occurred. Please try again.": "오류가 발생했습니다. 다시 시도해 주세요."
+  "An error occurred. Please try again.": "오류가 발생했습니다. 다시 시도해 주세요.",
+  "Bookmarks": "북마크",
+  "Please sign in to use bookmarks": "북마크를 사용하려면 로그인하세요",
+  "New category…": "새 카테고리...",
+  "Add": "추가",
+  "Favorites": "즐겨찾기",
+  "Add bookmark to…": "북마크를 추가할 카테고리..."
 }

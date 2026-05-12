@@ -3,14 +3,17 @@
 import { format } from "node-pg-format";
 
 import { getPool } from "@/app/db";
+import { auth } from "@/auth";
 
 export type Sentence = {
+  id: number;
   html: string;
   text: string;
   page_start: string;
   page_end: string;
   type: string;
   lang: string;
+  is_bookmarked: boolean;
   scan_urls:
     | {
         url: string;
@@ -52,6 +55,16 @@ export async function fetchSource(
 
   const excludeChineseString = excludeChinese ? "AND lang NOT IN ('chi')" : "";
 
+  const session = await auth();
+  const userId = session?.user?.id ? parseInt(session.user.id, 10) : null;
+  const bookmarkSubquery =
+    userId !== null
+      ? format(
+          `(SELECT EXISTS(SELECT 1 FROM bookmarks WHERE sentence_id = r.id AND user_id = %s))`,
+          userId,
+        )
+      : `FALSE`;
+
   try {
     const pool = await getPool();
 
@@ -65,7 +78,8 @@ export async function fetchSource(
                AND COALESCE(im.section, '') = COALESCE(r.section, '')
                AND (im.page = r.page_start OR im.page = r.page_end)
             ) i
-          ) AS scan_urls
+          ) AS scan_urls,
+          ${bookmarkSubquery} AS is_bookmarked
           FROM sentences r
           WHERE
             filename = %L

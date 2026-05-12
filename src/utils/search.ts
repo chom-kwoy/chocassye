@@ -21,6 +21,7 @@ export type Sentence = {
   year_sort: number;
   decade_sort: number;
   is_target: boolean;
+  is_bookmarked?: boolean;
   scan_urls:
     | {
         edition: string;

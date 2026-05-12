@@ -15,6 +15,7 @@ import React from "react";
 
 import { Book, SentenceWithContext } from "@/app/search/search";
 import { darkTheme, lightTheme } from "@/app/themes";
+import { BookmarkButton } from "@/components/BookmarkButton";
 import { highlight } from "@/components/Highlight";
 import { ImagePreviewLink } from "@/components/ImageTooltip";
 import { ThemeContext } from "@/components/ThemeContext";
@@ -69,7 +70,7 @@ export function SentenceWithCtx(props: {
   }, []);
   useOutsideAlerter(wrapperRef, removeCtxView);
 
-  const [isHovered, setIsHovered] = React.useState(false);
+  const isHovered = React.useRef(false);
   const [copyNotifOpen, setCopyNotifOpen] = React.useState(false);
 
   const makeWiktionaryCitation = React.useCallback(() => {
@@ -110,7 +111,7 @@ export function SentenceWithCtx(props: {
 
   React.useEffect(() => {
     const handleKeyPress = async (event: KeyboardEvent) => {
-      if (isHovered) {
+      if (isHovered.current) {
         // Perform action when key is pressed and mouse is inside
         if (event.key === "w") {
           const citation = makeWiktionaryCitation();
@@ -125,14 +126,18 @@ export function SentenceWithCtx(props: {
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [makeWiktionaryCitation, isHovered]); // Re-run effect if isHovered changes
+  }, [makeWiktionaryCitation]);
 
   return (
     <div
       ref={wrapperRef}
       style={{ position: "relative" }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => {
+        isHovered.current = true;
+      }}
+      onMouseLeave={() => {
+        isHovered.current = false;
+      }}
     >
       <Snackbar
         open={copyNotifOpen}
@@ -188,7 +193,29 @@ export function SentenceWithCtx(props: {
           </Paper>
         </Box>
       </ThemeProvider>
-      <Box className={"searchResultSentence"} sx={{ py: 0.4 }}>
+      <Box
+        className={"searchResultSentence"}
+        sx={{
+          py: 0.4,
+          position: "relative",
+          "&:hover .bookmark-btn": { visibility: "visible" },
+        }}
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            left: 0,
+            top: "50%",
+            transform: "translate(-100%, -50%)",
+          }}
+        >
+          <BookmarkButton
+            sentenceId={props.sentenceWithCtx.mainSentence.id}
+            initiallyBookmarked={
+              props.sentenceWithCtx.mainSentence.is_bookmarked ?? false
+            }
+          />
+        </Box>
         <SentenceAndPage
           sentence={props.sentenceWithCtx.mainSentence}
           book={props.book}

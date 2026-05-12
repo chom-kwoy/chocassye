@@ -66,5 +66,11 @@
   "Invalid email or password": "Invalid email or password",
   "Account created! You can now sign in.": "Account created! You can now sign in.",
   "This email is registered with a different sign-in method.": "This email is registered with a different sign-in method.",
-  "An error occurred. Please try again.": "An error occurred. Please try again."
+  "An error occurred. Please try again.": "An error occurred. Please try again.",
+  "Bookmarks": "Bookmarks",
+  "Please sign in to use bookmarks": "Please sign in to use bookmarks",
+  "New category…": "New category…",
+  "Add": "Add",
+  "Favorites": "Favorites",
+  "Add bookmark to…": "Add bookmark to…"
 }

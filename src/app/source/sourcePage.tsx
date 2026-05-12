@@ -22,9 +22,9 @@ import { grey } from "@mui/material/colors";
 import { styled } from "@mui/material/styles";
 import { Interweave } from "interweave";
 import { useRouter } from "next/navigation";
-import React from "react";
 
 import { Sentence, SourceData } from "@/app/source/fetchSource";
+import { BookmarkButton } from "@/components/BookmarkButton";
 import { highlight } from "@/components/Highlight";
 import { ImagePreviewLink } from "@/components/ImageTooltip";
 import { useTranslation } from "@/components/TranslationProvider";
@@ -55,14 +55,28 @@ function SentenceView({
     theme.palette.mode === "light" ? grey["600"] : grey["400"];
 
   return (
-    <StyledTableRow>
+    <StyledTableRow sx={{ "&:hover .bookmark-btn": { visibility: "visible" } }}>
       <StyledTableCell
         className={[
           `sourceSentence`,
           `sentence_type_${sentence.type}`,
           `sentence_lang_${sentence.lang}`,
         ].join(" ")}
+        sx={{ position: "relative" }}
       >
+        <Box
+          sx={{
+            position: "absolute",
+            left: 0,
+            top: "50%",
+            transform: "translate(-100%, -50%)",
+          }}
+        >
+          <BookmarkButton
+            sentenceId={sentence.id}
+            initiallyBookmarked={sentence.is_bookmarked}
+          />
+        </Box>
         <Typography component="span" sx={{ fontSize: "1.3em" }}>
           <Interweave
             className="text"
@@ -313,7 +327,7 @@ export function SourcePage(props: {
       </Grid>
 
       <Grid size={12}>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} style={{ overflow: "visible" }}>
           <Table size="small">
             <TableBody>
               {props.result.sentences.map((sentence, i) => (

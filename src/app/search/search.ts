@@ -4,6 +4,7 @@ import escapeStringRegexp from "escape-string-regexp";
 import { format } from "node-pg-format";
 
 import { getPool } from "@/app/db";
+import { auth } from "@/auth";
 import {
   Sentence,
   makeCorpusQuery,
@@ -78,6 +79,23 @@ export async function search(
       };
     }
 
+    // Bulk-check which main sentences are bookmarked by the current user.
+    const session = await auth();
+    const userId = session?.user?.id ? parseInt(session.user.id, 10) : null;
+    let bookmarkedIds = new Set<number>();
+    if (userId) {
+      const mainIds = results.flatMap((row) =>
+        row.sentences.filter((s) => s.is_target).map((s) => s.id),
+      );
+      if (mainIds.length > 0) {
+        const bmResult = await client.query(
+          `SELECT sentence_id FROM bookmarks WHERE user_id = $1 AND sentence_id = ANY($2::int[])`,
+          [userId, mainIds],
+        );
+        bookmarkedIds = new Set(bmResult.rows.map((r) => r.sentence_id));
+      }
+    }
+
     const books: Book[] = [];
     for (const row of results) {
       if (books.length === 0 || books[books.length - 1].name !== row.filename) {
@@ -94,8 +112,12 @@ export async function search(
       }
       row.sentences.sort((a, b) => a.number_in_book - b.number_in_book);
       const targetIdx = row.sentences.findIndex((sent) => sent.is_target);
+      const mainSent = row.sentences[targetIdx];
       books[books.length - 1].sentences.push({
-        mainSentence: row.sentences[targetIdx],
+        mainSentence: {
+          ...mainSent,
+          is_bookmarked: bookmarkedIds.has(mainSent.id),
+        },
         contextBefore: row.sentences.slice(0, targetIdx),
         contextAfter: row.sentences.slice(targetIdx + 1),
       });
