@@ -36,6 +36,7 @@ const REMEMBER_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
 const SESSION_MAX_AGE = 24 * 60 * 60; // 24 hours in seconds
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
