@@ -43,6 +43,10 @@ export function BookmarkButton({
     new Set(),
   );
   const [isBookmarked, setIsBookmarked] = React.useState(initiallyBookmarked);
+
+  React.useEffect(() => {
+    setIsBookmarked(initiallyBookmarked);
+  }, [sentenceId]);
   const [newName, setNewName] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [adding, setAdding] = React.useState(false);
