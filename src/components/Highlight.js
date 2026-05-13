@@ -380,6 +380,9 @@ export function findMatchingRanges(
   searchTerm,
   ignoreSep,
 ) {
+  if (searchTerm === "") {
+    return [];
+  }
   try {
     // Find matches
     let hlRegex = searchTerm2Regex(searchTerm, ignoreSep);

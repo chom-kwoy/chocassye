@@ -16,3 +16,4 @@ dist/*
 **/.next/*
 donations.json
 next-env.d.ts
+tsconfig.tsbuildinfo
