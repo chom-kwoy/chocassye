@@ -211,7 +211,6 @@ const MIDDLE_CHINESE_DATA = await readMCDataFiles();
 
 export async function getMCData(char: string): Promise<Reading[] | null> {
   const data = MIDDLE_CHINESE_DATA[char];
-  console.log(data);
   if (data === undefined) {
     return null;
   }

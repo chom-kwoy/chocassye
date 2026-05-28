@@ -317,7 +317,7 @@ const compatVowels = sortedAlts([...new Set(Object.values(TO_COMPAT_VOWELS))]);
 
 const modHangInitials = sortedAlts([...new Set(Object.values(Y2MH_INITIALS))]);
 const modHangVowels = sortedAlts([...new Set(Object.values(Y2MH_VOWELS))]);
-const modHangFinals = sortedAlts([...new Set(Object.values(Y2MH_FINALS)), ""]);
+const modHangFinals = sortedAlts([...new Set(Object.values(Y2MH_FINALS))]);
 
 const yaleInitials = sortedAlts(Object.keys(Y2H_INITIALS));
 const yaleVowels = sortedAlts(Object.keys(Y2H_VOWELS));
@@ -338,7 +338,7 @@ export const HANGUL_SYLLABLE_REGEX = new RegExp(
   "g",
 );
 export const MODERN_HANGUL_SYLLABLE_REGEX = new RegExp(
-  `((?:${modHangInitials})(?:${modHangVowels})(?:${modHangFinals}))(?![〮〯])`,
+  `((?:${modHangInitials})(?:${modHangVowels})(?:(?:${modHangFinals})(?!〮|〯)|(?!${modHangFinals})(?!〮|〯)))`,
   "g",
 );
 
