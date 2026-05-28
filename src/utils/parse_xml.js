@@ -5,7 +5,7 @@ import { glob } from "glob";
 import jsdom from "jsdom";
 import { promisify } from "util";
 
-import { hangul_to_yale } from "../components/YaleToHangul.mjs";
+import { hangul_to_yale } from "../components/YaleToHangul";
 import { insert_into_db } from "./insert_into_db.ts";
 import {
   parse_year_string,

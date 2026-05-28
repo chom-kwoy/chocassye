@@ -1,4 +1,4 @@
-export const PUA_CONV_TABLE = {
+export const PUA_CONV_TABLE: Record<string, string> = {
   "\ue0bc": "\u115f\u1161\u11ae", // 'ᅟᅡᆮ'
   "\ue0bd": "\u115f\u1161\ud7cd", // 'ᅟᅡퟍ'
   "\ue0be": "\u115f\u1161\u11af", // 'ᅟᅡᆯ'

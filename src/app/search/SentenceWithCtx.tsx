@@ -20,7 +20,7 @@ import { highlight } from "@/components/Highlight";
 import { ImagePreviewLink } from "@/components/ImageTooltip";
 import { ThemeContext } from "@/components/ThemeContext";
 import { useTranslation } from "@/components/TranslationProvider";
-import { yale_to_hangul } from "@/components/YaleToHangul.mjs";
+import { yale_to_hangul } from "@/components/YaleToHangul";
 import { Sentence } from "@/utils/search";
 
 function useOutsideAlerter<T extends HTMLElement>(
