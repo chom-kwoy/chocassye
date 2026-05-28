@@ -1,24 +1,25 @@
 import {
   COMPAT_VOWELS_RE,
-  CONS_RE,
-  HANGUL_TO_YALE,
+  H2Y,
+  H2Y_INITIALS,
+  H2Y_VOWELS,
   INDEP_CONS_RE,
-  INITIAL_HANGUL_TO_YALE,
-  TO_COMPATIBILITY_FORM,
-  VOWELS_RE,
-  VOWEL_HANGUL_TO_YALE,
-  YALE_TO_HANGUL_CONSONANTS,
-  YALE_TO_HANGUL_FINAL_CONSONANTS,
-  YALE_TO_HANGUL_INITIAL_CONSONANTS,
-  YALE_TO_HANGUL_TONE_MARKS,
-  YALE_TO_HANGUL_VOWELS,
+  MODERN_HANGUL_SYLLABLE_REGEX,
+  TO_COMPAT,
+  Y2H_CONSONANTS,
+  Y2H_FINALS,
+  Y2H_INITIALS,
+  Y2H_TONE_MARKS,
+  Y2H_VOWELS,
+  YALE_CONSONANTS_RE,
+  YALE_VOWELS_RE,
 } from "@/components/hangulData";
 import { Span, replace_and_map } from "@/components/mappingUtils";
 
 import { PUA_CONV_TABLE } from "./PuaToUni";
 
 export function normalize_string(string: string): string {
-  string = string.replace(COMPAT_VOWELS_RE, function (ch) {
+  string = string.replaceAll(COMPAT_VOWELS_RE, function (ch) {
     return "ᅟ" + ch;
   });
 
@@ -51,7 +52,7 @@ export function yale_to_hangul(
 ): string | YaleToHangulResult {
   string = normalize_string(string);
 
-  const splits = string.split(VOWELS_RE);
+  const splits = string.split(YALE_VOWELS_RE);
 
   let result = "";
 
@@ -62,9 +63,9 @@ export function yale_to_hangul(
   const index_map: number[] = new Array(string.length);
 
   for (const split of splits) {
-    if (split.match(VOWELS_RE)) {
+    if (split.match(YALE_VOWELS_RE)) {
       // Vowel
-      result += YALE_TO_HANGUL_VOWELS[split];
+      result += Y2H_VOWELS[split];
 
       for (let i = 0; i < split.length; ++i) {
         index_map[input_idx + i] = syllable_begin_pos;
@@ -84,8 +85,8 @@ export function yale_to_hangul(
       let prefix = "";
       for (; prefix_len >= 1; --prefix_len) {
         const part = remaining.slice(0, prefix_len);
-        if (Object.hasOwn(YALE_TO_HANGUL_FINAL_CONSONANTS, part)) {
-          prefix = YALE_TO_HANGUL_FINAL_CONSONANTS[part];
+        if (Object.hasOwn(Y2H_FINALS, part)) {
+          prefix = Y2H_FINALS[part];
           remaining = remaining.slice(prefix_len);
           break;
         }
@@ -93,7 +94,7 @@ export function yale_to_hangul(
 
       let tone_mark = "";
       if (remaining.length > 0 && ["L", "H", "R"].includes(remaining[0])) {
-        tone_mark = YALE_TO_HANGUL_TONE_MARKS[remaining[0]];
+        tone_mark = Y2H_TONE_MARKS[remaining[0]];
         remaining = remaining.slice(1);
         prefix_len += 1;
       }
@@ -103,9 +104,9 @@ export function yale_to_hangul(
       let suffix = "";
       for (; suffix_len >= 1; --suffix_len) {
         const part = remaining.slice(remaining.length - suffix_len);
-        if (Object.hasOwn(YALE_TO_HANGUL_INITIAL_CONSONANTS, part)) {
+        if (Object.hasOwn(Y2H_INITIALS, part)) {
           remaining = remaining.slice(0, remaining.length - suffix_len);
-          suffix = YALE_TO_HANGUL_INITIAL_CONSONANTS[part];
+          suffix = Y2H_INITIALS[part];
           found_suffix = true;
           break;
         }
@@ -127,7 +128,7 @@ export function yale_to_hangul(
       let i = prefix_len;
       let middle_part_output = "";
       for (const part of remaining.split(".")) {
-        const cons_re = new RegExp(CONS_RE.source, "g");
+        const cons_re = new RegExp(YALE_CONSONANTS_RE.source, "g");
 
         let match: RegExpExecArray | null;
         let last_idx = 0;
@@ -149,7 +150,7 @@ export function yale_to_hangul(
               for (let j = i; j < i + piece.length; ++j) {
                 index_map[input_idx + j] = syllable_begin_pos;
               }
-              middle_part_output += YALE_TO_HANGUL_CONSONANTS[piece];
+              middle_part_output += Y2H_CONSONANTS[piece];
               syllable_begin_pos += 1;
               i += piece.length;
             }
@@ -196,18 +197,27 @@ export function yale_to_hangul(
   }
   to_next_index[last_output_index] = result.length;
 
-  const mapping: Span[] = new Array(string.length);
+  let mapping: Span[] = new Array(string.length);
   for (let i = 0; i < string.length; ++i) {
     mapping[i] = [index_map[i], to_next_index[index_map[i]]];
   }
 
   // replace freestanding consonants with compatibility forms
-  result = result.replace(INDEP_CONS_RE, (_, p1: string) => {
-    if (Object.hasOwn(TO_COMPATIBILITY_FORM, p1)) {
-      return TO_COMPATIBILITY_FORM[p1];
+  result = result.replaceAll(INDEP_CONS_RE, (_, p1: string) => {
+    if (Object.hasOwn(TO_COMPAT, p1)) {
+      return TO_COMPAT[p1];
     }
     return p1;
   });
+
+  // replace modern hangul syllables with precomposed forms
+  // for copy-paste compatibility with Microsoft products
+  [result, mapping] = replace_and_map(
+    result,
+    MODERN_HANGUL_SYLLABLE_REGEX,
+    (match) => match.normalize("NFC"),
+    mapping,
+  );
 
   if (get_index_map) {
     return {
@@ -228,8 +238,8 @@ export function hangul_to_yale(string: string, tone_all = false): string {
   string = normalize_string(string);
 
   for (const ch of string) {
-    if (Object.hasOwn(HANGUL_TO_YALE, ch)) {
-      if (wasHangul && Object.hasOwn(INITIAL_HANGUL_TO_YALE, ch)) {
+    if (Object.hasOwn(H2Y, ch)) {
+      if (wasHangul && Object.hasOwn(H2Y_INITIALS, ch)) {
         if (tone_all && !hadTone) {
           result += "L";
         }
@@ -237,12 +247,12 @@ export function hangul_to_yale(string: string, tone_all = false): string {
         hadVowel = false;
       }
       hadTone = ch === "〮" || ch === "〯";
-      if (Object.hasOwn(VOWEL_HANGUL_TO_YALE, ch)) {
+      if (Object.hasOwn(H2Y_VOWELS, ch)) {
         hadVowel = true;
       }
 
       if (!hadTone || (tone_all && hadTone)) {
-        result += HANGUL_TO_YALE[ch];
+        result += H2Y[ch];
       }
       wasHangul = true;
     } else {

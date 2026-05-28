@@ -60,7 +60,7 @@ export function replace_and_map(
   }
 
   const orig_string_length = string.length;
-  string = string.replace(pattern, function (match, ...rest) {
+  string = string.replaceAll(pattern, function (match, ...rest) {
     let sub = replace_func(match, ...rest);
     let sub_mapping: Span[] | null = null;
     if (Array.isArray(sub)) {

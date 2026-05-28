@@ -1,7 +1,7 @@
 import {
-  HANGUL_REGEX,
-  TONED_SYLLABLE_REGEX,
-  UNTONED_SYLLABLE_REGEX,
+  HANGUL_SYLLABLE_REGEX,
+  YALE_TONED_SYLLABLE_REGEX,
+  YALE_UNTONED_SYLLABLE_REGEX,
 } from "@/components/hangulData.ts";
 import { invert_mapping, replace_and_map } from "@/components/mappingUtils";
 
@@ -21,7 +21,7 @@ export function toText(sentence, ignoreSep) {
   // Select full syllables
   [sentence, mapping] = replace_and_map(
     sentence,
-    UNTONED_SYLLABLE_REGEX,
+    YALE_UNTONED_SYLLABLE_REGEX,
     function (_, syllable) {
       return syllable;
     },
@@ -54,7 +54,7 @@ export function toTextIgnoreTone(sentence, ignoreSep) {
   // Replace toned syllables with untoned syllables
   [sentence, mapping] = replace_and_map(
     sentence,
-    TONED_SYLLABLE_REGEX,
+    YALE_TONED_SYLLABLE_REGEX,
     function (_, syllable) {
       return syllable;
     },
@@ -139,7 +139,7 @@ export function toDisplayHTML(sentence, romanize = false) {
   if (!romanize) {
     [sentence, mapping] = replace_and_map(
       sentence,
-      HANGUL_REGEX,
+      HANGUL_SYLLABLE_REGEX,
       function (_, syllable, tone) {
         if (tone === "") {
           return `<span data-tone="L">${syllable}</span>`;

@@ -1,10 +1,9 @@
 import { escapeStringRegexp } from "next/dist/shared/lib/escape-regexp";
 
-export const YALE_TO_HANGUL_INITIAL_CONSONANTS: Record<string, string> = {
+const Y2MH_INITIALS: Record<string, string> = {
   k: "ᄀ",
   kk: "ᄁ",
   n: "ᄂ",
-  nn: "ᄔ",
   t: "ᄃ",
   tt: "ᄄ",
   l: "ᄅ",
@@ -14,7 +13,6 @@ export const YALE_TO_HANGUL_INITIAL_CONSONANTS: Record<string, string> = {
   s: "ᄉ",
   ss: "ᄊ",
   G: "ᄋ",
-  GG: "ᅇ",
   c: "ᄌ",
   cc: "ᄍ",
   ch: "ᄎ",
@@ -22,7 +20,11 @@ export const YALE_TO_HANGUL_INITIAL_CONSONANTS: Record<string, string> = {
   th: "ᄐ",
   ph: "ᄑ",
   h: "ᄒ",
-
+};
+export const Y2H_INITIALS: Record<string, string> = {
+  ...Y2MH_INITIALS,
+  nn: "ᄔ",
+  GG: "ᅇ",
   pk: "ᄞ",
   pt: "ᄠ",
   ps: "ᄡ",
@@ -49,7 +51,6 @@ export const YALE_TO_HANGUL_INITIAL_CONSONANTS: Record<string, string> = {
   z: "ᅀ",
   hh: "ᅘ",
   q: "ᅙ",
-
   ng: "ᅌ",
 
   "s/": "ᄼ",
@@ -66,36 +67,20 @@ export const YALE_TO_HANGUL_INITIAL_CONSONANTS: Record<string, string> = {
 
   "`": "ᅟ",
 };
-export const YALE_TO_HANGUL_FINAL_CONSONANTS: Record<string, string> = {
+const Y2MH_FINALS: Record<string, string> = {
   k: "ᆨ",
   kk: "ᆩ",
   ks: "ᆪ",
   n: "ᆫ",
   nc: "ᆬ",
-  nk: "ᇅ",
-  nt: "ᇆ",
-  ns: "ᇇ",
-  nz: "ᇈ",
   nh: "ᆭ",
   t: "ᆮ",
   l: "ᆯ",
   lk: "ᆰ",
-  lks: "ᇌ",
-  lt: "ᇎ",
   lm: "ᆱ",
-  lmk: "ᇑ",
-  lms: "ᇒ",
-  lmh: "ퟘ",
   lp: "ᆲ",
-  lps: "ᇓ",
   ls: "ᆳ",
-  lss: "ᇖ",
-  lth: "ᆴ",
-  lph: "ᆵ",
   lh: "ᆶ",
-  lz: "ᇗ",
-  lW: "ᇕ",
-  lq: "ᇙ",
   m: "ᆷ",
   p: "ᆸ",
   ps: "ᆹ",
@@ -108,6 +93,25 @@ export const YALE_TO_HANGUL_FINAL_CONSONANTS: Record<string, string> = {
   th: "ᇀ",
   ph: "ᇁ",
   h: "ᇂ",
+};
+export const Y2H_FINALS: Record<string, string> = {
+  ...Y2MH_FINALS,
+  nk: "ᇅ",
+  nt: "ᇆ",
+  ns: "ᇇ",
+  nz: "ᇈ",
+  lks: "ᇌ",
+  lt: "ᇎ",
+  lmk: "ᇑ",
+  lms: "ᇒ",
+  lmh: "ퟘ",
+  lps: "ᇓ",
+  lss: "ᇖ",
+  lth: "ᆴ",
+  lph: "ᆵ",
+  lz: "ᇗ",
+  lW: "ᇕ",
+  lq: "ᇙ",
   nth: "ᇉ",
   nch: "ퟌ",
   mk: "ᇚ",
@@ -129,11 +133,11 @@ export const YALE_TO_HANGUL_FINAL_CONSONANTS: Record<string, string> = {
   ngs: "ᇱ",
   pl: "ᇣ",
 };
-export const YALE_TO_HANGUL_CONSONANTS: Record<string, string> = {
-  ...YALE_TO_HANGUL_FINAL_CONSONANTS,
-  ...YALE_TO_HANGUL_INITIAL_CONSONANTS,
+export const Y2H_CONSONANTS: Record<string, string> = {
+  ...Y2H_FINALS,
+  ...Y2H_INITIALS,
 };
-export const YALE_TO_HANGUL_VOWELS: Record<string, string> = {
+const Y2MH_VOWELS: Record<string, string> = {
   a: "ᅡ",
   ay: "ᅢ",
   ya: "ᅣ",
@@ -155,7 +159,9 @@ export const YALE_TO_HANGUL_VOWELS: Record<string, string> = {
   u: "ᅳ",
   uy: "ᅴ",
   i: "ᅵ",
-
+};
+export const Y2H_VOWELS: Record<string, string> = {
+  ...Y2MH_VOWELS,
   o: "ᆞ",
   oy: "ᆡ",
   yoy: "ᆈ",
@@ -165,13 +171,13 @@ export const YALE_TO_HANGUL_VOWELS: Record<string, string> = {
   ywa: "ᆄ",
   yway: "ᆅ",
 };
-export const YALE_TO_HANGUL_TONE_MARKS: Record<string, string> = {
+export const Y2H_TONE_MARKS: Record<string, string> = {
   L: "",
   H: "〮",
   R: "〯",
 };
 // prettier-ignore
-const TO_COMPATIBLITY_CONS: Record<string, string> = {
+const TO_COMPAT_CONSONANTS: Record<string, string> = {
   "ᄀ": "ㄱ",
   "ᄁ": "ㄲ",
   "ᆪ": "ㄳ",
@@ -238,7 +244,7 @@ const TO_COMPATIBLITY_CONS: Record<string, string> = {
   "ᅙ": "ㆆ",
 };
 // prettier-ignore
-const TO_COMPATIBILITY_VOWELS: Record<string, string> = {
+const TO_COMPAT_VOWELS: Record<string, string> = {
   "ᅡ": "ㅏ",
   "ᅢ": "ㅐ",
   "ᅣ": "ㅑ",
@@ -269,84 +275,78 @@ const TO_COMPATIBILITY_VOWELS: Record<string, string> = {
   "ᆞ": "ㆍ",
   "ᆡ": "ㆎ",
 };
-export const TO_COMPATIBILITY_FORM: Record<string, string> = {
-  ...TO_COMPATIBLITY_CONS,
-  ...TO_COMPATIBILITY_VOWELS,
+export const TO_COMPAT: Record<string, string> = {
+  ...TO_COMPAT_CONSONANTS,
+  ...TO_COMPAT_VOWELS,
 };
 
 function inv(obj: Record<string, string>): Record<string, string> {
   return Object.fromEntries(Object.entries(obj).map(([k, v]) => [v, k]));
 }
 
-export const HANGUL_TO_YALE: Record<string, string> = {
-  ...inv(YALE_TO_HANGUL_INITIAL_CONSONANTS),
-  ...inv(YALE_TO_HANGUL_VOWELS),
-  ...inv(YALE_TO_HANGUL_FINAL_CONSONANTS),
+export const H2Y: Record<string, string> = {
+  ...inv(Y2H_INITIALS),
+  ...inv(Y2H_VOWELS),
+  ...inv(Y2H_FINALS),
   "〮": "H",
   "〯": "R",
 };
-export const INITIAL_HANGUL_TO_YALE: Record<string, string> = {
-  ...inv(YALE_TO_HANGUL_INITIAL_CONSONANTS),
-};
-export const VOWEL_HANGUL_TO_YALE: Record<string, string> = {
-  ...inv(YALE_TO_HANGUL_VOWELS),
-};
+export const H2Y_INITIALS: Record<string, string> = inv(Y2H_INITIALS);
+export const H2Y_VOWELS: Record<string, string> = inv(Y2H_VOWELS);
+export const H2Y_FINALS: Record<string, string> = inv(Y2H_FINALS);
+export const H2Y_TONE_MARKS: Record<string, string> = inv(Y2H_TONE_MARKS);
 
 function sortedAlts(keys: string[]): string {
   const maxLen = Math.max(0, ...keys.map((k) => k.length));
   const parts: string[] = [];
-  for (let len = maxLen; len > 0; --len) {
+  for (let len = maxLen; len >= 0; --len) {
     for (const key of keys) {
-      if (key.length === len) parts.push(escapeStringRegexp(key));
+      if (key.length === len) {
+        parts.push(escapeStringRegexp(key));
+      }
     }
   }
   return parts.join("|");
 }
 
-function makeRegex(items: string[]): RegExp {
-  return new RegExp(`(${sortedAlts(items)})`);
-}
-export const VOWELS_RE = makeRegex(Object.keys(YALE_TO_HANGUL_VOWELS));
-export const CONS_RE = makeRegex(
-  Array.from(
-    new Set([
-      ...Object.keys(YALE_TO_HANGUL_INITIAL_CONSONANTS),
-      ...Object.keys(YALE_TO_HANGUL_FINAL_CONSONANTS),
-    ]),
-  ),
-);
+const hangulInitials = sortedAlts(Object.keys(H2Y_INITIALS));
+const hangulVowels = sortedAlts(Object.keys(H2Y_VOWELS));
+const hangulFinals = sortedAlts([...Object.keys(H2Y_FINALS), ""]);
+const hangulTones = sortedAlts(Object.keys(H2Y_TONE_MARKS));
+const compatVowels = sortedAlts([...new Set(Object.values(TO_COMPAT_VOWELS))]);
 
-const _initialVals = [
-  ...new Set(Object.values(YALE_TO_HANGUL_INITIAL_CONSONANTS)),
-];
-const _vowelVals = [...new Set(Object.values(YALE_TO_HANGUL_VOWELS))];
-const _finalVals = [...new Set(Object.values(YALE_TO_HANGUL_FINAL_CONSONANTS))];
-const _compatVowelVals = [...new Set(Object.values(TO_COMPATIBILITY_VOWELS))];
-const _hangulTones =
-  Object.values(YALE_TO_HANGUL_TONE_MARKS)
-    .filter((v) => v)
-    .join("|") + "|";
+const modHangInitials = sortedAlts([...new Set(Object.values(Y2MH_INITIALS))]);
+const modHangVowels = sortedAlts([...new Set(Object.values(Y2MH_VOWELS))]);
+const modHangFinals = sortedAlts([...new Set(Object.values(Y2MH_FINALS)), ""]);
+
+const yaleInitials = sortedAlts(Object.keys(Y2H_INITIALS));
+const yaleVowels = sortedAlts(Object.keys(Y2H_VOWELS));
+const yaleFinals = sortedAlts([...Object.keys(Y2H_FINALS), ""]);
+const yaleTones = sortedAlts(Object.keys(Y2H_TONE_MARKS));
+const yaleConsonants = sortedAlts(Object.keys(Y2H_CONSONANTS));
+
+export const YALE_VOWELS_RE = new RegExp(`(${yaleVowels})`);
+export const YALE_CONSONANTS_RE = new RegExp(`(${yaleConsonants})`);
 
 export const INDEP_CONS_RE = new RegExp(
-  `([${_initialVals.join("")}])(?![${_vowelVals.join("")}])`,
+  `(${hangulInitials})(?!${hangulVowels})`,
+  "g",
 );
-export const COMPAT_VOWELS_RE = new RegExp(`[${_compatVowelVals.join("")}]`);
-export const HANGUL_REGEX = new RegExp(
-  `((?:${_initialVals.join("|")})(?:${_vowelVals.join("|")})(?:${[..._finalVals, ""].join("|")}))(${_hangulTones})`,
+export const COMPAT_VOWELS_RE = new RegExp(`(?:${compatVowels})`, "g");
+export const HANGUL_SYLLABLE_REGEX = new RegExp(
+  `((?:${hangulInitials})(?:${hangulVowels})(?:${hangulFinals}))(${hangulTones})`,
+  "g",
+);
+export const MODERN_HANGUL_SYLLABLE_REGEX = new RegExp(
+  `((?:${modHangInitials})(?:${modHangVowels})(?:${modHangFinals}))(?![〮〯])`,
   "g",
 );
 
-const _yaleInits = sortedAlts(Object.keys(YALE_TO_HANGUL_INITIAL_CONSONANTS));
-const _yaleVowels = sortedAlts(Object.keys(YALE_TO_HANGUL_VOWELS));
-const _yaleFinals =
-  sortedAlts(Object.keys(YALE_TO_HANGUL_FINAL_CONSONANTS)) + "|";
-const _yaleTones = [...Object.keys(YALE_TO_HANGUL_TONE_MARKS), ""].join("|");
-
-export const TONED_SYLLABLE_REGEX = new RegExp(
-  `((?:${_yaleInits})(?:${_yaleVowels})(?:${_yaleFinals}))(${_yaleTones})(?![^<]*>)`,
+export const YALE_TONED_SYLLABLE_REGEX = new RegExp(
+  `((?:${yaleInitials})(?:${yaleVowels})(?:${yaleFinals}))(${yaleTones})(?![^<]*>)`,
   "g",
 );
-export const UNTONED_SYLLABLE_REGEX = new RegExp(
-  `((?:${_yaleInits})(?:${_yaleVowels})(?:${_yaleFinals}))(?![^<]*>)`,
+export const YALE_UNTONED_SYLLABLE_REGEX = new RegExp(
+  `((?:${yaleInitials})(?:${yaleVowels})(?:${yaleFinals}))(?![^<]*>)`,
   "g",
 );
