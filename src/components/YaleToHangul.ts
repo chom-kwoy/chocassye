@@ -13,9 +13,9 @@ import {
   YALE_TO_HANGUL_TONE_MARKS,
   YALE_TO_HANGUL_VOWELS,
 } from "@/components/hangulData";
-import { Span } from "@/components/mappingUtils";
+import { Span, replace_and_map } from "@/components/mappingUtils";
 
-import { PUA_CONV_TABLE } from "./PuaToUni.js";
+import { PUA_CONV_TABLE } from "./PuaToUni";
 
 export function normalize_string(string: string): string {
   string = string.replace(COMPAT_VOWELS_RE, function (ch) {
@@ -196,7 +196,7 @@ export function yale_to_hangul(
   }
   to_next_index[last_output_index] = result.length;
 
-  const mapping: [number, number][] = new Array(string.length);
+  const mapping: Span[] = new Array(string.length);
   for (let i = 0; i < string.length; ++i) {
     mapping[i] = [index_map[i], to_next_index[index_map[i]]];
   }

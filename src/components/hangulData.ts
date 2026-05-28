@@ -292,18 +292,21 @@ export const VOWEL_HANGUL_TO_YALE: Record<string, string> = {
   ...inv(YALE_TO_HANGUL_VOWELS),
 };
 
-function makeRegex(items: string[], maxLen: number): RegExp {
-  const sortedItems: string[] = [];
+function sortedAlts(keys: string[]): string {
+  const maxLen = Math.max(0, ...keys.map((k) => k.length));
+  const parts: string[] = [];
   for (let len = maxLen; len > 0; --len) {
-    for (const item of items) {
-      if (item.length === len) {
-        sortedItems.push(escapeStringRegexp(item));
-      }
+    for (const key of keys) {
+      if (key.length === len) parts.push(escapeStringRegexp(key));
     }
   }
-  return new RegExp(`(${sortedItems.join("|")})`);
+  return parts.join("|");
 }
-export const VOWELS_RE = makeRegex(Object.keys(YALE_TO_HANGUL_VOWELS), 4);
+
+function makeRegex(items: string[]): RegExp {
+  return new RegExp(`(${sortedAlts(items)})`);
+}
+export const VOWELS_RE = makeRegex(Object.keys(YALE_TO_HANGUL_VOWELS));
 export const CONS_RE = makeRegex(
   Array.from(
     new Set([
@@ -311,17 +314,39 @@ export const CONS_RE = makeRegex(
       ...Object.keys(YALE_TO_HANGUL_FINAL_CONSONANTS),
     ]),
   ),
-  4,
 );
 
-// TODO: Generate these
-export const INDEP_CONS_RE =
-  /([ᄀᄁᄂᄔᄃᄄᄅᄆᄇᄈᄉᄊᄋᅇᄌᄍᄎᄏᄐᄑᄒᄞᄠᄡᄢᄣᄦᄧᄩᄫᄭᄮᄯᄲᄶᄻᅀᅘᅙᅌᄼᄽᅎᅏᅔᄾᄿᅐᅑᅕᅟ])(?![ᅡᅢᅣᅤᅥᅦᅧᅨᅩᅪᅫᅬᅭᅮᅯᅰᅱᅲᅳᅴᅵᆞᆡᆈᆔᆑᆒᆄᆅ])/;
-export const COMPAT_VOWELS_RE =
-  /[ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣㆇㆈㆉㆊㆋㆌㆍㆎ]/;
-export const HANGUL_REGEX =
-  /((?:ᄀ|ᄁ|ᄂ|ᄔ|ᄃ|ᄄ|ᄅ|ᄆ|ᄇ|ᄈ|ᄉ|ᄊ|ᄋ|ᅇ|ᄌ|ᄍ|ᄎ|ᄏ|ᄐ|ᄑ|ᄒ|ᄞ|ᄠ|ᄡ|ᄢ|ᄣ|ᄧ|ᄩ|ᄫ|ᄭ|ᄮ|ᄯ|ᄲ|ᄶ|ᄻ|ᅀ|ᅘ|ᅙ|ᅌ|ᅟ)(?:ᅡ|ᅢ|ᅣ|ᅤ|ᅥ|ᅦ|ᅧ|ᅨ|ᅩ|ᅪ|ᅫ|ᅬ|ᅭ|ᅮ|ᅯ|ᅰ|ᅱ|ᅲ|ᅳ|ᅴ|ᅵ|ᆞ|ᆡ|ᆈ|ᆔ|ᆑ|ᆒ|ᆄ|ᆅ)(?:ᆨ|ᆪ|ᆫ|ᆮ|ᆯ|ᆰ|ᆱ|ᆲ|ᆳ|ᆷ|ᆸ|ᆹ|ᆺ|ᆼ|ᇆ|ᇇ|ᇈ|ᇌ|ᇗ|ᇙ|ᇜ|ᇝ|ᇟ|ᇢ|ᇦ|ᇫ|ᇰ|ᇹ|ᇱ|))(〮|〯|)/g;
-export const TONED_SYLLABLE_REGEX =
-  /((?:psk|pst|psc|pth|ss\/|cc\/|ch\/|ss\\|cc\\|ch\\|kk|nn|tt|pp|ss|GG|cc|ch|kh|th|ph|pk|pt|ps|pc|sk|sn|st|sp|sc|sh|hh|ng|s\/|c\/|s\\|c\\|k|n|t|l|m|p|s|G|c|h|W|z|q|`)(?:ywey|yway|yay|yey|way|woy|wey|wuy|yoy|yuy|ywe|ywa|ay|ya|ey|ye|wo|wa|yo|wu|we|yu|uy|oy|a|e|u|i|o)(?:lth|lph|nth|lks|mch|ngs|kk|ks|nc|nh|lk|lm|lp|ls|lh|ps|ss|ch|kh|th|ph|nt|ns|nz|lz|lq|mk|mp|ms|mz|sk|st|ng|pl|k|n|t|l|m|p|s|G|c|h|M|W|z|f|q|))(L|H|R|)(?![^<]*>)/g;
-export const UNTONED_SYLLABLE_REGEX =
-  /((?:psk|pst|psc|pth|ss\/|cc\/|ch\/|ss\\|cc\\|ch\\|kk|nn|tt|pp|ss|GG|cc|ch|kh|th|ph|pk|pt|ps|pc|sk|sn|st|sp|sc|sh|hh|ng|s\/|c\/|s\\|c\\|k|n|t|l|m|p|s|G|c|h|W|z|q|`)(?:ywey|yway|yay|yey|way|woy|wey|wuy|yoy|yuy|ywe|ywa|ay|ya|ey|ye|wo|wa|yo|wu|we|yu|uy|oy|a|e|u|i|o)(?:lth|lph|nth|lks|mch|ngs|kk|ks|nc|nh|lk|lm|lp|ls|lh|ps|ss|ch|kh|th|ph|nt|ns|nz|lz|lq|mk|mp|ms|mz|sk|st|ng|pl|k|n|t|l|m|p|s|G|c|h|M|W|z|f|q|))(?![^<]*>)/g;
+const _initialVals = [
+  ...new Set(Object.values(YALE_TO_HANGUL_INITIAL_CONSONANTS)),
+];
+const _vowelVals = [...new Set(Object.values(YALE_TO_HANGUL_VOWELS))];
+const _finalVals = [...new Set(Object.values(YALE_TO_HANGUL_FINAL_CONSONANTS))];
+const _compatVowelVals = [...new Set(Object.values(TO_COMPATIBILITY_VOWELS))];
+const _hangulTones =
+  Object.values(YALE_TO_HANGUL_TONE_MARKS)
+    .filter((v) => v)
+    .join("|") + "|";
+
+export const INDEP_CONS_RE = new RegExp(
+  `([${_initialVals.join("")}])(?![${_vowelVals.join("")}])`,
+);
+export const COMPAT_VOWELS_RE = new RegExp(`[${_compatVowelVals.join("")}]`);
+export const HANGUL_REGEX = new RegExp(
+  `((?:${_initialVals.join("|")})(?:${_vowelVals.join("|")})(?:${[..._finalVals, ""].join("|")}))(${_hangulTones})`,
+  "g",
+);
+
+const _yaleInits = sortedAlts(Object.keys(YALE_TO_HANGUL_INITIAL_CONSONANTS));
+const _yaleVowels = sortedAlts(Object.keys(YALE_TO_HANGUL_VOWELS));
+const _yaleFinals =
+  sortedAlts(Object.keys(YALE_TO_HANGUL_FINAL_CONSONANTS)) + "|";
+const _yaleTones = [...Object.keys(YALE_TO_HANGUL_TONE_MARKS), ""].join("|");
+
+export const TONED_SYLLABLE_REGEX = new RegExp(
+  `((?:${_yaleInits})(?:${_yaleVowels})(?:${_yaleFinals}))(${_yaleTones})(?![^<]*>)`,
+  "g",
+);
+export const UNTONED_SYLLABLE_REGEX = new RegExp(
+  `((?:${_yaleInits})(?:${_yaleVowels})(?:${_yaleFinals}))(?![^<]*>)`,
+  "g",
+);

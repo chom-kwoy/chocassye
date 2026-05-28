@@ -60,7 +60,7 @@ export function replace_and_map(
   }
 
   const orig_string_length = string.length;
-  string = string.replace(pattern as string, function (match, ...rest) {
+  string = string.replace(pattern, function (match, ...rest) {
     let sub = replace_func(match, ...rest);
     let sub_mapping: Span[] | null = null;
     if (Array.isArray(sub)) {
@@ -115,8 +115,7 @@ export function replace_and_map(
   });
 
   // remaining part
-  const offset = orig_string_length;
-  for (let i = 0; i < offset - last_offset; ++i) {
+  for (let i = 0; i < orig_string_length - last_offset; ++i) {
     for (
       let j = inv_mapper_begin(last_offset + i);
       j < inv_mapper_end(last_offset + i);
