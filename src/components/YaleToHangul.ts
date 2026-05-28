@@ -13,6 +13,7 @@ import {
   YALE_TO_HANGUL_TONE_MARKS,
   YALE_TO_HANGUL_VOWELS,
 } from "@/components/hangulData";
+import { Span } from "@/components/mappingUtils";
 
 import { PUA_CONV_TABLE } from "./PuaToUni.js";
 
@@ -36,7 +37,7 @@ export function normalize_string(string: string): string {
 
 export type YaleToHangulResult = {
   result: string;
-  mapping: [number, number][];
+  mapping: Span[];
 };
 
 export function yale_to_hangul(
