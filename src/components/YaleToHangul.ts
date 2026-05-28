@@ -25,7 +25,7 @@ export function normalize_string(string: string): string {
 
   let conv_string = "";
   for (const ch of string) {
-    if (Object.prototype.hasOwnProperty.call(PUA_CONV_TABLE, ch)) {
+    if (Object.hasOwn(PUA_CONV_TABLE, ch)) {
       conv_string += PUA_CONV_TABLE[ch];
     } else {
       conv_string += ch;
@@ -83,12 +83,7 @@ export function yale_to_hangul(
       let prefix = "";
       for (; prefix_len >= 1; --prefix_len) {
         const part = remaining.slice(0, prefix_len);
-        if (
-          Object.prototype.hasOwnProperty.call(
-            YALE_TO_HANGUL_FINAL_CONSONANTS,
-            part,
-          )
-        ) {
+        if (Object.hasOwn(YALE_TO_HANGUL_FINAL_CONSONANTS, part)) {
           prefix = YALE_TO_HANGUL_FINAL_CONSONANTS[part];
           remaining = remaining.slice(prefix_len);
           break;
@@ -107,12 +102,7 @@ export function yale_to_hangul(
       let suffix = "";
       for (; suffix_len >= 1; --suffix_len) {
         const part = remaining.slice(remaining.length - suffix_len);
-        if (
-          Object.prototype.hasOwnProperty.call(
-            YALE_TO_HANGUL_INITIAL_CONSONANTS,
-            part,
-          )
-        ) {
+        if (Object.hasOwn(YALE_TO_HANGUL_INITIAL_CONSONANTS, part)) {
           remaining = remaining.slice(0, remaining.length - suffix_len);
           suffix = YALE_TO_HANGUL_INITIAL_CONSONANTS[part];
           found_suffix = true;
@@ -212,7 +202,7 @@ export function yale_to_hangul(
 
   // replace freestanding consonants with compatibility forms
   result = result.replace(INDEP_CONS_RE, (_, p1: string) => {
-    if (Object.prototype.hasOwnProperty.call(TO_COMPATIBILITY_FORM, p1)) {
+    if (Object.hasOwn(TO_COMPATIBILITY_FORM, p1)) {
       return TO_COMPATIBILITY_FORM[p1];
     }
     return p1;
@@ -237,11 +227,8 @@ export function hangul_to_yale(string: string, tone_all = false): string {
   string = normalize_string(string);
 
   for (const ch of string) {
-    if (Object.prototype.hasOwnProperty.call(HANGUL_TO_YALE, ch)) {
-      if (
-        wasHangul &&
-        Object.prototype.hasOwnProperty.call(INITIAL_HANGUL_TO_YALE, ch)
-      ) {
+    if (Object.hasOwn(HANGUL_TO_YALE, ch)) {
+      if (wasHangul && Object.hasOwn(INITIAL_HANGUL_TO_YALE, ch)) {
         if (tone_all && !hadTone) {
           result += "L";
         }
@@ -249,7 +236,7 @@ export function hangul_to_yale(string: string, tone_all = false): string {
         hadVowel = false;
       }
       hadTone = ch === "〮" || ch === "〯";
-      if (Object.prototype.hasOwnProperty.call(VOWEL_HANGUL_TO_YALE, ch)) {
+      if (Object.hasOwn(VOWEL_HANGUL_TO_YALE, ch)) {
         hadVowel = true;
       }
 
