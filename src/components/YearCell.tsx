@@ -26,7 +26,11 @@ export function YearCell({
         : String(year);
 
   return (
-    <StyledTableCell component="th" scope="row" sx={{ verticalAlign: "top" }}>
+    <StyledTableCell
+      component="th"
+      scope="row"
+      sx={{ verticalAlign: "top", userSelect: "none" }}
+    >
       <Grid sx={{ py: 0.4 }}>
         <Tooltip title={yearString}>
           <Box>{label}</Box>

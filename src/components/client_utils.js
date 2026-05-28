@@ -1,6 +1,6 @@
 "use client";
 
-import { TableCell, TableRow } from "@mui/material";
+import { Table, TableCell, TableRow } from "@mui/material";
 import { tableCellClasses } from "@mui/material/TableCell";
 import {
   amber,
@@ -35,6 +35,22 @@ export async function postData(url = "", data = {}) {
     body: JSON.stringify(data),
   });
   return response.json();
+}
+
+export function CopyableTable({ onCopy = undefined, ...props }) {
+  return (
+    <Table
+      size="small"
+      {...props}
+      onCopy={(e) => {
+        const text = window.getSelection()?.toString() ?? "";
+        e.clipboardData.setData("text/plain", text);
+        e.clipboardData.setData("text/html", text.replace(/\n/g, "<br>"));
+        e.preventDefault();
+        onCopy?.(e);
+      }}
+    />
+  );
 }
 
 export const StyledTableCell = styled(TableCell)(({ theme }) => ({

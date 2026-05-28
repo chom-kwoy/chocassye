@@ -8,7 +8,6 @@ import {
   Grid,
   Pagination,
   Paper,
-  Table,
   TableBody,
   TableContainer,
   Typography,
@@ -28,6 +27,7 @@ import { useTranslation } from "@/components/TranslationProvider";
 import { yale_to_hangul } from "@/components/YaleToHangul";
 import { YearCell } from "@/components/YearCell";
 import {
+  CopyableTable,
   StyledTableCell,
   StyledTableRow,
   highlightColors,
@@ -60,7 +60,7 @@ function SearchResultsList(props: {
           elevation={3}
           style={{ overflow: "visible" }}
         >
-          <Table size="small">
+          <CopyableTable>
             <TableBody>
               {/* For each book */}
               {props.filteredResults.map((book, i) => (
@@ -94,7 +94,7 @@ function SearchResultsList(props: {
                 </StyledTableRow>
               ))}
             </TableBody>
-          </Table>
+          </CopyableTable>
         </TableContainer>
       </Grid>
     </React.Fragment>

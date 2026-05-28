@@ -28,7 +28,11 @@ import { BookmarkButton } from "@/components/BookmarkButton";
 import { highlight } from "@/components/Highlight";
 import { ImagePreviewLink } from "@/components/ImageTooltip";
 import { useTranslation } from "@/components/TranslationProvider";
-import { StyledTableCell, StyledTableRow } from "@/components/client_utils";
+import {
+  CopyableTable,
+  StyledTableCell,
+  StyledTableRow,
+} from "@/components/client_utils";
 
 const NonAlternatingTableRow = styled(TableRow)(({}) => ({
   // hide last border
@@ -86,11 +90,8 @@ function SentenceView({
           />
         </Typography>
       </StyledTableCell>
-      <StyledTableCell align="right">
-        <span
-          className="pageNum"
-          style={{ color: sourceTextColor, userSelect: "none" }}
-        >
+      <StyledTableCell align="right" sx={{ userSelect: "none" }}>
+        <span className="pageNum" style={{ color: sourceTextColor }}>
           (
           <ImagePreviewLink
             page_start={sentence.page_start}
@@ -328,7 +329,7 @@ export function SourcePage(props: {
 
       <Grid size={12}>
         <TableContainer component={Paper} style={{ overflow: "visible" }}>
-          <Table size="small">
+          <CopyableTable>
             <TableBody>
               {props.result.sentences.map((sentence, i) => (
                 <SentenceView
@@ -339,7 +340,7 @@ export function SourcePage(props: {
                 />
               ))}
             </TableBody>
-          </Table>
+          </CopyableTable>
         </TableContainer>
       </Grid>
 
