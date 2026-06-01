@@ -19,7 +19,6 @@ import {
   MenuItem,
   Paper,
   Tab,
-  Table,
   TableBody,
   TableContainer,
   Tabs,
@@ -32,7 +31,11 @@ import { SentenceWithCtx } from "@/app/search/SentenceWithCtx";
 import { Book, SentenceWithContext } from "@/app/search/search";
 import { useTranslation } from "@/components/TranslationProvider";
 import { YearCell } from "@/components/YearCell";
-import { StyledTableCell, StyledTableRow } from "@/components/client_utils";
+import {
+  CopyableTable,
+  StyledTableCell,
+  StyledTableRow,
+} from "@/components/client_utils";
 import { Sentence } from "@/utils/search";
 
 import type { Category } from "./page";
@@ -361,7 +364,7 @@ export function BookmarksPage({
               elevation={3}
               style={{ overflow: "visible" }}
             >
-              <Table size="small">
+              <CopyableTable>
                 <TableBody>
                   {bookmarks.map((entry) => (
                     <BookmarkRow
@@ -374,7 +377,7 @@ export function BookmarksPage({
                     />
                   ))}
                 </TableBody>
-              </Table>
+              </CopyableTable>
             </TableContainer>
           )}
         </>
