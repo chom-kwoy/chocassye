@@ -26,6 +26,8 @@ test_y2h("tolkspstayH", "ᄃᆞᇌᄣᅢ〮");
 test_y2h("kakH", "각〮");
 test_y2h("kaH", "가〮");
 test_y2h("koH", "ᄀᆞ〮");
+test_y2h("kang", "가ᇰ");
+test_y2h("kangR", "가ᇰ〯");
 
 console.log(`Passed: ${passedChecks}/${totalChecks}`);
 console.log(`Failed: ${totalChecks - passedChecks}`);
