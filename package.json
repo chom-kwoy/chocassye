@@ -50,6 +50,7 @@
     "start": "next start",
     "lint": "npx eslint",
     "populate-db": "tsx scripts/populate_db.js",
+    "update-db": "tsx scripts/update_db.ts",
     "prepare": "husky install",
     "test": "jest"
   },

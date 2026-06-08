@@ -276,7 +276,12 @@ function parse_xml(parser, data) {
   return parser.parseFromString(data, "text/xml");
 }
 
-export async function insert_xml_documents(pool, batch_size, slice) {
+export async function insert_xml_documents(
+  pool,
+  batch_size,
+  slice,
+  existing_filenames = null,
+) {
   const dom = new jsdom.JSDOM("");
   const parser = new dom.window.DOMParser();
 
@@ -296,6 +301,15 @@ export async function insert_xml_documents(pool, batch_size, slice) {
 
     if (process.env.FILE) {
       if (!file.includes(process.env.FILE)) {
+        continue;
+      }
+    }
+
+    // Skip files already present in the database (matched by parsed filename).
+    if (existing_filenames !== null) {
+      const { filename } = year_and_bookname_from_filename(file);
+      if (existing_filenames.has(filename)) {
+        console.log(i, "SKIP (already in db)", file);
         continue;
       }
     }

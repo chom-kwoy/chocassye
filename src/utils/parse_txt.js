@@ -234,7 +234,12 @@ function add_text_file(file, text) {
   }
 }
 
-export function insert_txt_documents(pool, batch_size, doc_cnt) {
+export function insert_txt_documents(
+  pool,
+  batch_size,
+  doc_cnt,
+  existing_filenames = null,
+) {
   return glob("chocassye-corpus/data/*/*.txt").then(async (files) => {
     console.log("Total", files.length, "files");
 
@@ -255,12 +260,24 @@ export function insert_txt_documents(pool, batch_size, doc_cnt) {
         .then(async (text) => {
           text = text.replace(/^\uFEFF/, ""); // remove BOM
           const [book_details, sentences] = add_text_file(file, text);
+          // Skip files already present in the database (matched by filename).
+          if (
+            existing_filenames !== null &&
+            existing_filenames.has(book_details.filename)
+          ) {
+            return "SKIP";
+          }
           const DRY_RUN = (process.env.DRY_RUN || "no") === "yes";
           if (!DRY_RUN) {
-            return insert_into_db(pool, book_details, sentences);
+            await insert_into_db(pool, book_details, sentences);
           }
+          return "DONE";
         })
-        .then(() => {
+        .then((status) => {
+          if (status === "SKIP") {
+            console.log(i, "SKIP (already in db)", file);
+            return;
+          }
           console.log(i, "DONE", file);
           inserted_books.push(file);
         })
