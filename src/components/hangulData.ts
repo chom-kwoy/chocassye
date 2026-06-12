@@ -318,11 +318,12 @@ const compatVowels = sortedAlts([...new Set(Object.values(TO_COMPAT_VOWELS))]);
 const modHangInitials = sortedAlts([...new Set(Object.values(Y2MH_INITIALS))]);
 const modHangVowels = sortedAlts([...new Set(Object.values(Y2MH_VOWELS))]);
 const modHangFinals = sortedAlts([...new Set(Object.values(Y2MH_FINALS))]);
-const oldHangFinals = sortedAlts([
-  ...new Set(Object.values(Y2H_FINALS)).difference(
-    new Set(Object.values(Y2MH_FINALS)),
+const modHangFinalsSet = new Set(Object.values(Y2MH_FINALS));
+const oldHangFinals = sortedAlts(
+  [...new Set(Object.values(Y2H_FINALS))].filter(
+    (f) => !modHangFinalsSet.has(f),
   ),
-]);
+);
 
 const yaleInitials = sortedAlts(Object.keys(Y2H_INITIALS));
 const yaleVowels = sortedAlts(Object.keys(Y2H_VOWELS));
