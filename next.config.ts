@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [new URL("https://*.backblazeb2.com/**")],
+    contentDispositionType: "inline",
   },
 };
 process.on("unhandledRejection", (error) => {
