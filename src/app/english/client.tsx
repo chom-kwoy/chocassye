@@ -21,7 +21,7 @@ export function EnglishClient() {
   return (
     <Stack sx={{ maxWidth: "lg" }}>
       <h1>참괴로운 영어표기법 변환기</h1>
-      <Paper elevation="1" sx={{ p: 2 }}>
+      <Paper elevation={1} sx={{ p: 2 }}>
         {/*영어 입력 */}
         <textarea
           value={englishInput}
