@@ -260,7 +260,9 @@ function compose(initial: string, vowel: string, final: string) {
   return assemble([initial, vowel, final]);
 }
 
-export async function convert(text: string): Promise<string> {
+export async function convert(
+  text: string,
+): Promise<{ ipa: string; hangul: string }> {
   const words = phonemize(text, {
     returnArray: true,
     format: "ipa",
@@ -298,5 +300,8 @@ export async function convert(text: string): Promise<string> {
     }
   }
 
-  return result.trim();
+  return {
+    ipa: precisePronunciations.join(" / "),
+    hangul: result.trim(),
+  };
 }
