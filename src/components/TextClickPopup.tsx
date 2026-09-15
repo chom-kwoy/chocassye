@@ -64,6 +64,13 @@ export function TextClickPopup({ children }: { children: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleClick = useCallback((e: MouseEvent) => {
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) {
+      setPopup(null);
+      setData(null);
+      return;
+    }
+
     const result = getWordAtPoint(e.clientX, e.clientY);
     if (result) {
       const { word, pos } = result;
@@ -110,6 +117,7 @@ export function TextClickPopup({ children }: { children: React.ReactNode }) {
         }}
         disableAutoFocus
         disableEnforceFocus
+        disableScrollLock
         slotProps={{
           paper: {
             sx: {
