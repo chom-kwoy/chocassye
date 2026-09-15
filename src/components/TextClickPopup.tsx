@@ -4,8 +4,10 @@ import { CircularProgress, Divider, Grid, Typography } from "@mui/material";
 import Popover from "@mui/material/Popover";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { Reading, getMCData } from "@/app/hanja/middleChinese";
-import { MiddleChinesePronInfo } from "@/app/hanja/page";
+import { getMCData } from "@/app/hanja/middleChinese";
+import type { Reading } from "@/app/hanja/middleChinese";
+
+import { MiddleChinesePronInfo } from "./MiddleChinesePronInfo";
 
 interface PopupState {
   char: string;
