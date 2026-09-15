@@ -10,6 +10,11 @@ import { MiddleChinesePronInfo } from "@/app/hanja/page";
 interface PopupState {
   word: string;
   anchorPosition: { top: number; left: number };
+  lookup:
+    | { status: "loading" }
+    | { status: "success"; readings: Reading[] }
+    | { status: "empty" }
+    | { status: "error" };
 }
 
 function getWordAtPoint(
@@ -57,34 +62,53 @@ function getWordAtPoint(
 
 export function TextClickPopup({ children }: { children: React.ReactNode }) {
   const [popup, setPopup] = useState<PopupState | null>(null);
-  const [data, setData] = React.useState<{
-    char: string;
-    readings: Reading[];
-  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const requestIdRef = useRef(0);
 
   const handleClick = useCallback((e: MouseEvent) => {
     const selection = window.getSelection();
     if (selection && !selection.isCollapsed) {
+      requestIdRef.current += 1;
       setPopup(null);
-      setData(null);
       return;
     }
 
     const result = getWordAtPoint(e.clientX, e.clientY);
     if (result) {
       const { word, pos } = result;
+      const requestId = ++requestIdRef.current;
       setPopup({
         word,
         anchorPosition: {
           top: (pos?.y ?? e.clientY) + 5,
           left: pos?.x ?? e.clientX,
         },
+        lookup: { status: "loading" },
       });
-      getMCData(word).then((readings) => {
-        setData(readings === null ? null : { char: word, readings });
-      });
+      getMCData(word)
+        .then((readings) => {
+          if (requestIdRef.current !== requestId) return;
+          setPopup((current) => {
+            if (!current || current.word !== word) return current;
+            return {
+              ...current,
+              lookup:
+                readings === null || readings.length === 0
+                  ? { status: "empty" }
+                  : { status: "success", readings },
+            };
+          });
+        })
+        .catch((error: unknown) => {
+          if (requestIdRef.current !== requestId) return;
+          console.error("Failed to load Middle Chinese data:", error);
+          setPopup((current) => {
+            if (!current || current.word !== word) return current;
+            return { ...current, lookup: { status: "error" } };
+          });
+        });
     } else {
+      requestIdRef.current += 1;
       setPopup(null);
     }
   }, []);
@@ -94,13 +118,14 @@ export function TextClickPopup({ children }: { children: React.ReactNode }) {
     if (!container) return;
     container.addEventListener("click", handleClick);
     return () => {
+      requestIdRef.current += 1;
       container.removeEventListener("click", handleClick);
     };
   }, [handleClick]);
 
   const handleClose = useCallback(() => {
+    requestIdRef.current += 1;
     setPopup(null);
-    setData(null);
   }, []);
 
   return (
@@ -137,22 +162,34 @@ export function TextClickPopup({ children }: { children: React.ReactNode }) {
           <>
             <Typography sx={{ fontSize: "150%" }}>{popup.word}</Typography>
             <Grid container spacing={1} alignItems="center">
-              {data?.readings.map((reading, i) => (
-                <React.Fragment key={i}>
-                  {i > 0 ? (
+              {popup.lookup.status === "success" &&
+                popup.lookup.readings.map((reading, i) => (
+                  <React.Fragment key={i}>
+                    {i > 0 ? (
+                      <Grid size={12}>
+                        <Divider />
+                      </Grid>
+                    ) : null}
                     <Grid size={12}>
-                      <Divider />
+                      <Grid container spacing={1} alignItems="center">
+                        <Grid size={1}>{i + 1}</Grid>
+                        <MiddleChinesePronInfo
+                          reading={reading}
+                          leftWidth={3}
+                        />
+                      </Grid>
                     </Grid>
-                  ) : null}
-                  <Grid size={12}>
-                    <Grid container spacing={1} alignItems="center">
-                      <Grid size={1}>{i + 1}</Grid>
-                      <MiddleChinesePronInfo reading={reading} leftWidth={3} />
-                    </Grid>
-                  </Grid>
-                </React.Fragment>
-              ))}
-              {!data && <CircularProgress color="inherit" />}
+                  </React.Fragment>
+                ))}
+              {popup.lookup.status === "loading" && (
+                <CircularProgress color="inherit" size={24} />
+              )}
+              {popup.lookup.status === "empty" && (
+                <Typography>중고음 자료가 없습니다.</Typography>
+              )}
+              {popup.lookup.status === "error" && (
+                <Typography>중고음 자료를 불러오지 못했습니다.</Typography>
+              )}
             </Grid>
           </>
         )}
