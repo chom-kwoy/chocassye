@@ -26,6 +26,23 @@ interface CharacterAtPoint {
 const INTERACTIVE_SELECTOR =
   'a, button, input, textarea, select, [role="button"], [contenteditable="true"]';
 
+function isPopupTarget(
+  node: Node,
+  container: Element,
+  targetSelector?: string,
+): boolean {
+  const element =
+    node.nodeType === Node.ELEMENT_NODE
+      ? (node as Element)
+      : node.parentElement;
+  return Boolean(
+    element &&
+      container.contains(node) &&
+      !element.closest(INTERACTIVE_SELECTOR) &&
+      (!targetSelector || element.closest(targetSelector)),
+  );
+}
+
 function getTextPositionAtPoint(
   x: number,
   y: number,
@@ -109,82 +126,133 @@ export function TextClickPopup({
   const containerRef = useRef<HTMLDivElement>(null);
   const requestIdRef = useRef(0);
 
+  const handleClose = useCallback(() => {
+    requestIdRef.current += 1;
+    setPopup(null);
+  }, []);
+
+  const showCharacter = useCallback(
+    ({ char, rect }: CharacterAtPoint) => {
+      const requestId = ++requestIdRef.current;
+      setPopup({
+        char,
+        anchorPosition: {
+          top: rect.bottom + 5,
+          left: rect.left + rect.width / 2,
+        },
+        lookup: { status: "loading" },
+      });
+      lookup(char)
+        .then((readings) => {
+          if (requestIdRef.current !== requestId) return;
+          setPopup((current) => {
+            if (!current || current.char !== char) return current;
+            return {
+              ...current,
+              lookup:
+                readings === null || readings.length === 0
+                  ? { status: "empty" }
+                  : { status: "success", readings },
+            };
+          });
+        })
+        .catch((error: unknown) => {
+          if (requestIdRef.current !== requestId) return;
+          console.error("Failed to load Middle Chinese data:", error);
+          setPopup((current) => {
+            if (!current || current.char !== char) return current;
+            return { ...current, lookup: { status: "error" } };
+          });
+        });
+    },
+    [lookup],
+  );
+
   const handleClick = useCallback(
     (e: MouseEvent) => {
+      const container = containerRef.current;
       const target = e.target;
       if (
-        !(target instanceof Element) ||
-        target.closest(INTERACTIVE_SELECTOR) ||
-        (targetSelector && !target.closest(targetSelector))
+        !container ||
+        !(target instanceof Node) ||
+        !isPopupTarget(target, container, targetSelector)
       ) {
-        requestIdRef.current += 1;
-        setPopup(null);
+        handleClose();
         return;
       }
 
       const selection = window.getSelection();
       if (selection && !selection.isCollapsed) {
-        requestIdRef.current += 1;
-        setPopup(null);
+        handleClose();
         return;
       }
 
       const result = getCharacterAtPoint(e.clientX, e.clientY);
       if (result) {
-        const { char, rect } = result;
-        const requestId = ++requestIdRef.current;
-        setPopup({
-          char,
-          anchorPosition: {
-            top: rect.bottom + 5,
-            left: rect.left + rect.width / 2,
-          },
-          lookup: { status: "loading" },
-        });
-        lookup(char)
-          .then((readings) => {
-            if (requestIdRef.current !== requestId) return;
-            setPopup((current) => {
-              if (!current || current.char !== char) return current;
-              return {
-                ...current,
-                lookup:
-                  readings === null || readings.length === 0
-                    ? { status: "empty" }
-                    : { status: "success", readings },
-              };
-            });
-          })
-          .catch((error: unknown) => {
-            if (requestIdRef.current !== requestId) return;
-            console.error("Failed to load Middle Chinese data:", error);
-            setPopup((current) => {
-              if (!current || current.char !== char) return current;
-              return { ...current, lookup: { status: "error" } };
-            });
-          });
+        showCharacter(result);
       } else {
-        requestIdRef.current += 1;
-        setPopup(null);
+        handleClose();
       }
     },
-    [lookup, targetSelector],
+    [handleClose, showCharacter, targetSelector],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (
+        e.key !== "Enter" ||
+        e.defaultPrevented ||
+        e.isComposing ||
+        e.altKey ||
+        e.ctrlKey ||
+        e.metaKey ||
+        e.shiftKey
+      ) {
+        return;
+      }
+
+      const container = containerRef.current;
+      const selection = window.getSelection();
+      if (
+        !container ||
+        !selection ||
+        selection.isCollapsed ||
+        selection.rangeCount !== 1
+      ) {
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+      if (
+        !isPopupTarget(range.startContainer, container, targetSelector) ||
+        !isPopupTarget(range.endContainer, container, targetSelector)
+      ) {
+        return;
+      }
+
+      const char = selection.toString().trim();
+      if (!/^\p{Script=Han}$/u.test(char)) return;
+
+      const rect = range.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) return;
+
+      e.preventDefault();
+      showCharacter({ char, rect });
+    },
+    [showCharacter, targetSelector],
   );
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     container.addEventListener("click", handleClick);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
       requestIdRef.current += 1;
       container.removeEventListener("click", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleClick]);
-
-  const handleClose = useCallback(() => {
-    requestIdRef.current += 1;
-    setPopup(null);
-  }, []);
+  }, [handleClick, handleKeyDown]);
 
   return (
     <div ref={containerRef}>
@@ -217,7 +285,12 @@ export function TextClickPopup({
         }}
       >
         {popup && (
-          <>
+          <div
+            role="status"
+            aria-atomic="true"
+            aria-busy={popup.lookup.status === "loading"}
+            aria-live="polite"
+          >
             <Typography sx={{ fontSize: "150%" }}>{popup.char}</Typography>
             <Grid container spacing={1} alignItems="center">
               {popup.lookup.status === "success" &&
@@ -240,7 +313,11 @@ export function TextClickPopup({
                   </React.Fragment>
                 ))}
               {popup.lookup.status === "loading" && (
-                <CircularProgress color="inherit" size={24} />
+                <CircularProgress
+                  aria-label="중고음 자료 불러오는 중"
+                  color="inherit"
+                  size={24}
+                />
               )}
               {popup.lookup.status === "empty" && (
                 <Typography>중고음 자료가 없습니다.</Typography>
@@ -249,7 +326,7 @@ export function TextClickPopup({
                 <Typography>중고음 자료를 불러오지 못했습니다.</Typography>
               )}
             </Grid>
-          </>
+          </div>
         )}
       </Popover>
     </div>

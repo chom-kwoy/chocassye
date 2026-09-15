@@ -23,6 +23,10 @@ beforeEach(() => {
     configurable: true,
     value: jest.fn(),
   });
+  Object.defineProperty(Range.prototype, "getBoundingClientRect", {
+    configurable: true,
+    value: jest.fn(),
+  });
 });
 
 function makeRect(left: number, right: number): DOMRect {
@@ -71,6 +75,7 @@ function mockCharacterRects(rects: Map<number, DOMRect>) {
 
 afterEach(() => {
   jest.restoreAllMocks();
+  window.getSelection()?.removeAllRanges();
   mockedGetMCData.mockReset();
 });
 
@@ -121,6 +126,8 @@ describe("TextClickPopup", () => {
         this.startContainer === first ? makeRect(0, 10) : makeRect(20, 30),
       ] as unknown as DOMRectList;
     });
+
+    return { first, second };
   }
 
   it("does not open while text is selected", () => {
@@ -132,6 +139,26 @@ describe("TextClickPopup", () => {
     fireEvent.click(screen.getByText("漢"), { clientX: 5, clientY: 10 });
 
     expect(mockedGetMCData).not.toHaveBeenCalled();
+  });
+
+  it("opens for a selected Han character when Enter is pressed", async () => {
+    mockedGetMCData.mockResolvedValue(null);
+    const { first } = renderTwoCharacters();
+    const range = document.createRange();
+    range.setStart(first, 0);
+    range.setEnd(first, 1);
+    jest.spyOn(range, "getBoundingClientRect").mockReturnValue(makeRect(0, 10));
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    fireEvent.keyDown(document, { key: "Enter" });
+
+    expect(mockedGetMCData).toHaveBeenCalledWith("漢");
+    expect(
+      await screen.findByText("중고음 자료가 없습니다."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
   });
 
   it("ignores a stale lookup response", async () => {
