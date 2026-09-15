@@ -8,7 +8,7 @@ import { Reading, getMCData } from "@/app/hanja/middleChinese";
 import { MiddleChinesePronInfo } from "@/app/hanja/page";
 
 interface PopupState {
-  word: string;
+  char: string;
   anchorPosition: { top: number; left: number };
   lookup:
     | { status: "loading" }
@@ -17,47 +17,76 @@ interface PopupState {
     | { status: "error" };
 }
 
-function getWordAtPoint(
+interface CharacterAtPoint {
+  char: string;
+  rect: DOMRect;
+}
+
+function getTextPositionAtPoint(
   x: number,
   y: number,
-): { word: string; pos: { x: number; y: number } | null } | null {
-  let pos = document.caretPositionFromPoint(x, y);
-  if (!pos) return null;
-
-  let node = pos.offsetNode;
-  if (node.nodeType !== Node.TEXT_NODE) return null;
-
-  if (node.parentElement !== null) {
-    const computedStyle = window.getComputedStyle(node.parentElement, null);
-    const fontSize = computedStyle.getPropertyValue("font-size");
-    const fontSizeInPixels = parseFloat(fontSize);
-
-    const newPos = document.caretPositionFromPoint(
-      x - fontSizeInPixels * 0.3,
-      y,
-    );
-    if (newPos) {
-      const newNode = newPos.offsetNode;
-      if (newNode.nodeType === Node.TEXT_NODE) {
-        node = newNode;
-        pos = newPos;
-      }
+): { node: Text; offset: number } | null {
+  if (typeof document.caretPositionFromPoint === "function") {
+    const position = document.caretPositionFromPoint(x, y);
+    if (position?.offsetNode.nodeType === Node.TEXT_NODE) {
+      return { node: position.offsetNode as Text, offset: position.offset };
     }
   }
 
-  const text = node.textContent ?? "";
-  const offset = Math.min(pos.offset, text.length - 1);
-
-  const match = text.slice(offset).match(/\p{Script=Han}/u);
-  if (match === null) {
-    return null;
+  if (typeof document.caretRangeFromPoint === "function") {
+    const range = document.caretRangeFromPoint(x, y);
+    if (range?.startContainer.nodeType === Node.TEXT_NODE) {
+      return {
+        node: range.startContainer as Text,
+        offset: range.startOffset,
+      };
+    }
   }
 
-  const rect = pos.getClientRect();
-  return {
-    word: match[0],
-    pos: rect ? { x: rect.left + rect.width / 2, y: rect.bottom } : null,
-  };
+  return null;
+}
+
+function getCharacterAtPoint(x: number, y: number): CharacterAtPoint | null {
+  const position = getTextPositionAtPoint(x, y);
+  if (!position) return null;
+
+  const text = position.node.data;
+  const candidates: (CharacterAtPoint & { distance: number })[] = [];
+  let start = 0;
+
+  for (const char of text) {
+    const end = start + char.length;
+    if (start <= position.offset && position.offset <= end) {
+      const range = document.createRange();
+      range.setStart(position.node, start);
+      range.setEnd(position.node, end);
+
+      for (const rect of range.getClientRects()) {
+        if (
+          rect.left <= x &&
+          x <= rect.right &&
+          rect.top <= y &&
+          y <= rect.bottom
+        ) {
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          candidates.push({
+            char,
+            rect,
+            distance: (centerX - x) ** 2 + (centerY - y) ** 2,
+          });
+        }
+      }
+    }
+    if (start > position.offset) break;
+    start = end;
+  }
+
+  candidates.sort((a, b) => a.distance - b.distance);
+  const candidate = candidates[0];
+  if (!candidate || !/^\p{Script=Han}$/u.test(candidate.char)) return null;
+
+  return candidate;
 }
 
 export function TextClickPopup({ children }: { children: React.ReactNode }) {
@@ -73,23 +102,23 @@ export function TextClickPopup({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const result = getWordAtPoint(e.clientX, e.clientY);
+    const result = getCharacterAtPoint(e.clientX, e.clientY);
     if (result) {
-      const { word, pos } = result;
+      const { char, rect } = result;
       const requestId = ++requestIdRef.current;
       setPopup({
-        word,
+        char,
         anchorPosition: {
-          top: (pos?.y ?? e.clientY) + 5,
-          left: pos?.x ?? e.clientX,
+          top: rect.bottom + 5,
+          left: rect.left + rect.width / 2,
         },
         lookup: { status: "loading" },
       });
-      getMCData(word)
+      getMCData(char)
         .then((readings) => {
           if (requestIdRef.current !== requestId) return;
           setPopup((current) => {
-            if (!current || current.word !== word) return current;
+            if (!current || current.char !== char) return current;
             return {
               ...current,
               lookup:
@@ -103,7 +132,7 @@ export function TextClickPopup({ children }: { children: React.ReactNode }) {
           if (requestIdRef.current !== requestId) return;
           console.error("Failed to load Middle Chinese data:", error);
           setPopup((current) => {
-            if (!current || current.word !== word) return current;
+            if (!current || current.char !== char) return current;
             return { ...current, lookup: { status: "error" } };
           });
         });
@@ -160,7 +189,7 @@ export function TextClickPopup({ children }: { children: React.ReactNode }) {
       >
         {popup && (
           <>
-            <Typography sx={{ fontSize: "150%" }}>{popup.word}</Typography>
+            <Typography sx={{ fontSize: "150%" }}>{popup.char}</Typography>
             <Grid container spacing={1} alignItems="center">
               {popup.lookup.status === "success" &&
                 popup.lookup.readings.map((reading, i) => (
