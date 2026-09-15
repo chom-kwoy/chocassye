@@ -24,6 +24,9 @@ interface CharacterAtPoint {
   rect: DOMRect;
 }
 
+const INTERACTIVE_SELECTOR =
+  'a, button, input, textarea, select, [role="button"], [contenteditable="true"]';
+
 function getTextPositionAtPoint(
   x: number,
   y: number,
@@ -91,58 +94,78 @@ function getCharacterAtPoint(x: number, y: number): CharacterAtPoint | null {
   return candidate;
 }
 
-export function TextClickPopup({ children }: { children: React.ReactNode }) {
+export function TextClickPopup({
+  children,
+  targetSelector,
+}: {
+  children: React.ReactNode;
+  targetSelector?: string;
+}) {
   const [popup, setPopup] = useState<PopupState | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const requestIdRef = useRef(0);
 
-  const handleClick = useCallback((e: MouseEvent) => {
-    const selection = window.getSelection();
-    if (selection && !selection.isCollapsed) {
-      requestIdRef.current += 1;
-      setPopup(null);
-      return;
-    }
+  const handleClick = useCallback(
+    (e: MouseEvent) => {
+      const target = e.target;
+      if (
+        !(target instanceof Element) ||
+        target.closest(INTERACTIVE_SELECTOR) ||
+        (targetSelector && !target.closest(targetSelector))
+      ) {
+        requestIdRef.current += 1;
+        setPopup(null);
+        return;
+      }
 
-    const result = getCharacterAtPoint(e.clientX, e.clientY);
-    if (result) {
-      const { char, rect } = result;
-      const requestId = ++requestIdRef.current;
-      setPopup({
-        char,
-        anchorPosition: {
-          top: rect.bottom + 5,
-          left: rect.left + rect.width / 2,
-        },
-        lookup: { status: "loading" },
-      });
-      getMCData(char)
-        .then((readings) => {
-          if (requestIdRef.current !== requestId) return;
-          setPopup((current) => {
-            if (!current || current.char !== char) return current;
-            return {
-              ...current,
-              lookup:
-                readings === null || readings.length === 0
-                  ? { status: "empty" }
-                  : { status: "success", readings },
-            };
-          });
-        })
-        .catch((error: unknown) => {
-          if (requestIdRef.current !== requestId) return;
-          console.error("Failed to load Middle Chinese data:", error);
-          setPopup((current) => {
-            if (!current || current.char !== char) return current;
-            return { ...current, lookup: { status: "error" } };
-          });
+      const selection = window.getSelection();
+      if (selection && !selection.isCollapsed) {
+        requestIdRef.current += 1;
+        setPopup(null);
+        return;
+      }
+
+      const result = getCharacterAtPoint(e.clientX, e.clientY);
+      if (result) {
+        const { char, rect } = result;
+        const requestId = ++requestIdRef.current;
+        setPopup({
+          char,
+          anchorPosition: {
+            top: rect.bottom + 5,
+            left: rect.left + rect.width / 2,
+          },
+          lookup: { status: "loading" },
         });
-    } else {
-      requestIdRef.current += 1;
-      setPopup(null);
-    }
-  }, []);
+        getMCData(char)
+          .then((readings) => {
+            if (requestIdRef.current !== requestId) return;
+            setPopup((current) => {
+              if (!current || current.char !== char) return current;
+              return {
+                ...current,
+                lookup:
+                  readings === null || readings.length === 0
+                    ? { status: "empty" }
+                    : { status: "success", readings },
+              };
+            });
+          })
+          .catch((error: unknown) => {
+            if (requestIdRef.current !== requestId) return;
+            console.error("Failed to load Middle Chinese data:", error);
+            setPopup((current) => {
+              if (!current || current.char !== char) return current;
+              return { ...current, lookup: { status: "error" } };
+            });
+          });
+      } else {
+        requestIdRef.current += 1;
+        setPopup(null);
+      }
+    },
+    [targetSelector],
+  );
 
   useEffect(() => {
     const container = containerRef.current;

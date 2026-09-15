@@ -135,7 +135,7 @@ export function SearchPageWrapper({
   }
 
   return (
-    <TextClickPopup>
+    <TextClickPopup targetSelector=".text">
       <SearchPage
         // Search parameters
         term={query.term}
