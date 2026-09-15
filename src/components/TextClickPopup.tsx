@@ -4,7 +4,6 @@ import { CircularProgress, Divider, Grid, Typography } from "@mui/material";
 import Popover from "@mui/material/Popover";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { getMCData } from "@/app/hanja/middleChinese";
 import type { Reading } from "@/app/hanja/middleChinese";
 
 import { MiddleChinesePronInfo } from "./MiddleChinesePronInfo";
@@ -51,7 +50,10 @@ function getTextPositionAtPoint(
   return null;
 }
 
-function getCharacterAtPoint(x: number, y: number): CharacterAtPoint | null {
+export function getCharacterAtPoint(
+  x: number,
+  y: number,
+): CharacterAtPoint | null {
   const position = getTextPositionAtPoint(x, y);
   if (!position) return null;
 
@@ -96,9 +98,11 @@ function getCharacterAtPoint(x: number, y: number): CharacterAtPoint | null {
 
 export function TextClickPopup({
   children,
+  lookup,
   targetSelector,
 }: {
   children: React.ReactNode;
+  lookup: (char: string) => Promise<Reading[] | null>;
   targetSelector?: string;
 }) {
   const [popup, setPopup] = useState<PopupState | null>(null);
@@ -137,7 +141,7 @@ export function TextClickPopup({
           },
           lookup: { status: "loading" },
         });
-        getMCData(char)
+        lookup(char)
           .then((readings) => {
             if (requestIdRef.current !== requestId) return;
             setPopup((current) => {
@@ -164,7 +168,7 @@ export function TextClickPopup({
         setPopup(null);
       }
     },
-    [targetSelector],
+    [lookup, targetSelector],
   );
 
   useEffect(() => {

@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
+import { getMCData } from "@/app/hanja/middleChinese";
 import { useDonationModal } from "@/components/DonationContext";
 import { TextClickPopup } from "@/components/TextClickPopup";
 
@@ -135,7 +136,7 @@ export function SearchPageWrapper({
   }
 
   return (
-    <TextClickPopup targetSelector=".text">
+    <TextClickPopup lookup={getMCData} targetSelector=".text">
       <SearchPage
         // Search parameters
         term={query.term}
