@@ -25,6 +25,7 @@ interface CharacterAtPoint {
 
 const INTERACTIVE_SELECTOR =
   'a, button, input, textarea, select, [role="button"], [contenteditable="true"]';
+const CLOSED_ANCHOR_POSITION = { top: 0, left: 0 };
 
 function isPopupTarget(
   node: Node,
@@ -261,7 +262,7 @@ export function TextClickPopup({
         open={Boolean(popup)}
         onClose={handleClose}
         anchorReference="anchorPosition"
-        anchorPosition={popup?.anchorPosition}
+        anchorPosition={popup?.anchorPosition ?? CLOSED_ANCHOR_POSITION}
         transformOrigin={{
           vertical: "top",
           horizontal: "left",
