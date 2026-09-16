@@ -22,6 +22,8 @@ import {
 } from "@mui/material/colors";
 import { styled } from "@mui/material/styles";
 
+import { replaceGugyeolPUAWithHanja } from "./Gugyeol";
+
 export async function postData(url = "", data = {}) {
   const response = await fetch(url, {
     method: "POST",
@@ -43,7 +45,9 @@ export function CopyableTable({ onCopy = undefined, ...props }) {
       size="small"
       {...props}
       onCopy={(e) => {
-        const text = window.getSelection()?.toString() ?? "";
+        const text = replaceGugyeolPUAWithHanja(
+          window.getSelection()?.toString() ?? "",
+        );
         e.clipboardData.setData("text/plain", text);
         e.clipboardData.setData("text/html", text.replace(/\n/g, "<br>"));
         e.preventDefault();
