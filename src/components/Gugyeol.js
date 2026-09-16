@@ -80,32 +80,50 @@ export const GUGYEOL_READINGS = {
 export const GUGYEOL_REGEX =
   /([恨捨\uf681\uf686\uf687\uf68c\uf690\uf693\uf695\uf696\uf69b\uf69f\uf6a0\uf6a4\uf6a5\uf6a8\uf6ab\uf6ac\uf6b0\uf6b4\uf6bc\uf6c0\uf6c2\uf6c7\uf6ce\uf6cf\uf6d0\uf6d2\uf6d5\uf6d6\uf6de\uf6e2\uf6e3\uf6ea\uf6ec\uf6f2\uf6f8\uf6fe\uf6ff\uf703\uf706\uf708\uf709\uf70a\uf70c\uf710\uf711\uf712\uf71a\uf71f\uf720\uf722\uf72a\uf73a\uf73b\uf73c\uf740\uf748\uf74d\uf750\uf755\uf757\uf75c\uf760\uf764\uf765\uf766\uf76b\uf76d\uf76e\uf772\uf775\uf779\uf77b\uf77c])/g;
 
-export function suggestGugyeol(input) {
-  if (input.length === 0) {
+const normalizedReadings = Object.entries(GUGYEOL_READINGS).map(
+  ([gugyeol, pron]) => ({
+    gugyeol,
+    pron,
+    readings: (pron.startsWith("?(") ? pron.slice(2, -1) : pron)
+      .split("/")
+      .map((reading) => hangul_to_yale(reading)),
+  }),
+);
+const maxReadingLength = Math.max(
+  ...normalizedReadings.flatMap(({ readings }) =>
+    readings.map((p) => p.length),
+  ),
+);
+const segmenter = new Intl.Segmenter("ko", { granularity: "grapheme" });
+
+export function suggestGugyeol(input, cursor = input.length) {
+  if (cursor <= 0 || cursor > input.length) {
     return [];
   }
-  input = hangul_to_yale(input);
-  let suggestions = [];
-  let visited = new Set();
-  for (let len = 1; len <= 4; len++) {
-    let searchPart = input.slice(-len);
-    for (const [gugyeol, pron] of Object.entries(GUGYEOL_READINGS)) {
-      let norm_pron = pron;
-      if (pron.startsWith("?(")) {
-        norm_pron = pron.slice(2, -1);
-      }
-      if (
-        norm_pron
-          .split("/")
-          .some((p) => hangul_to_yale(p).startsWith(searchPart))
-      ) {
-        if (visited.has(gugyeol)) {
-          continue;
-        }
-        visited.add(gugyeol);
-        suggestions.push({ gugyeol: gugyeol, pron: pron, replaceLength: len });
+
+  // Keep UTF-16 offsets into the original text, without splitting a grapheme.
+  const segments = Array.from(segmenter.segment(input));
+  const endIndex = segments.findIndex(
+    ({ index, segment }) => index + segment.length === cursor,
+  );
+  const suggestions = new Map();
+  for (let i = endIndex; i >= 0; i--) {
+    const replaceStart = segments[i].index;
+    const searchPart = hangul_to_yale(input.slice(replaceStart, cursor));
+    if (searchPart.length > maxReadingLength) break;
+    if (searchPart.length === 0) continue;
+
+    for (const { gugyeol, pron, readings } of normalizedReadings) {
+      if (readings.some((reading) => reading.startsWith(searchPart))) {
+        // Prefer the longest matching source span for a duplicate candidate.
+        suggestions.set(gugyeol, {
+          gugyeol,
+          pron,
+          replaceStart,
+          replaceEnd: cursor,
+        });
       }
     }
   }
-  return suggestions;
+  return Array.from(suggestions.values());
 }

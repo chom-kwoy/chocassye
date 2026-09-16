@@ -21,28 +21,54 @@ import { StyledTableCell } from "./client_utils";
 
 export default function TextFieldWithGugyeol(props) {
   const { t } = useTranslation();
-  const uniqueId = "#textfield-with-gugyeol"; // + Math.random().toString(36).substring(7);
+  const uniqueId = React.useId();
+  const inputRef = React.useRef(null);
+  const pendingSelection = React.useRef(null);
+  const [selection, setSelection] = React.useState({
+    start: props.value.length,
+    end: props.value.length,
+  });
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [gugyeolInputOpen, setGugyeolInputOpen] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
 
+  React.useLayoutEffect(() => {
+    const pending = pendingSelection.current;
+    if (pending && pending.value === props.value && inputRef.current) {
+      pendingSelection.current = null;
+      inputRef.current.setSelectionRange(pending.cursor, pending.cursor);
+      inputRef.current.focus();
+    }
+  }, [props.value, selection]);
+
+  function updateSelection(event) {
+    const { selectionStart, selectionEnd } = event.target;
+    setSelection({ start: selectionStart, end: selectionEnd });
+  }
+
   function toggleGugyeolInput() {
-    setAnchorEl(document.getElementById(uniqueId));
+    setAnchorEl(inputRef.current);
     setGugyeolInputOpen(!gugyeolInputOpen);
     setIsFocused(!gugyeolInputOpen);
   }
 
   function replaceGugyeol(suggestion) {
-    let term = props.value;
-    term =
-      term.slice(0, term.length - suggestion.replaceLength) +
-      suggestion.gugyeol;
+    const term =
+      props.value.slice(0, suggestion.replaceStart) +
+      suggestion.gugyeol +
+      props.value.slice(suggestion.replaceEnd);
+    const cursor = suggestion.replaceStart + suggestion.gugyeol.length;
+    pendingSelection.current = { value: term, cursor };
+    setSelection({ start: cursor, end: cursor });
     props.onChange({ target: { value: term } });
   }
 
   let text = props.value;
-  let suggestedGugyeols = suggestGugyeol(text);
+  let suggestedGugyeols =
+    selection.start === selection.end
+      ? suggestGugyeol(text, selection.start)
+      : [];
   let groupedSuggestions = [];
   const COLUMNS = 3;
   for (let i = 0; i < suggestedGugyeols.length; i++) {
@@ -58,12 +84,18 @@ export default function TextFieldWithGugyeol(props) {
     <Box>
       <Box position="relative">
         <TextField
-          id={uniqueId} // FIXME: This should be a unique ID
+          id={uniqueId}
+          inputRef={inputRef}
           variant="filled"
           value={props.value}
           label={props.label}
-          onChange={(event) => props.onChange(event)}
-          onKeyDown={(event) => props.onKeyDown(event)}
+          onChange={(event) => {
+            updateSelection(event);
+            props.onChange(event);
+          }}
+          onSelect={updateSelection}
+          onFocus={updateSelection}
+          onKeyDown={(event) => props.onKeyDown?.(event)}
           fullWidth
         />
         <Box
@@ -76,7 +108,11 @@ export default function TextFieldWithGugyeol(props) {
           }}
         >
           <Tooltip title={t("Toggle Gugyeol Input")}>
-            <IconButton variant="outlined" onClick={() => toggleGugyeolInput()}>
+            <IconButton
+              variant="outlined"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => toggleGugyeolInput()}
+            >
               <Typography
                 sx={{
                   fontSize: "20pt",
@@ -106,7 +142,10 @@ export default function TextFieldWithGugyeol(props) {
                 <TableRow key={i}>
                   {group.map((suggestion, j) => (
                     <StyledTableCell key={j} sx={{ padding: 0 }}>
-                      <Button onClick={() => replaceGugyeol(suggestion)}>
+                      <Button
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => replaceGugyeol(suggestion)}
+                      >
                         <Stack
                           direction="column"
                           justifyContent="center"
