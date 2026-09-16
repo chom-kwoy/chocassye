@@ -80,6 +80,31 @@ export default function TextFieldWithGugyeol(props) {
     );
   }
 
+  function handleKeyDown(event) {
+    props.onKeyDown?.(event);
+    if (
+      event.defaultPrevented ||
+      !gugyeolInputOpen ||
+      !isFocused ||
+      event.nativeEvent.isComposing ||
+      event.keyCode === 229 ||
+      event.ctrlKey ||
+      event.altKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      !/^[1-9]$/.test(event.key)
+    ) {
+      return;
+    }
+
+    const suggestion = suggestedGugyeols[Number(event.key) - 1];
+    if (suggestion) {
+      event.preventDefault();
+      event.stopPropagation();
+      replaceGugyeol(suggestion);
+    }
+  }
+
   return (
     <Box>
       <Box position="relative">
@@ -95,7 +120,7 @@ export default function TextFieldWithGugyeol(props) {
           }}
           onSelect={updateSelection}
           onFocus={updateSelection}
-          onKeyDown={(event) => props.onKeyDown?.(event)}
+          onKeyDown={handleKeyDown}
           fullWidth
         />
         <Box
@@ -143,9 +168,27 @@ export default function TextFieldWithGugyeol(props) {
                   {group.map((suggestion, j) => (
                     <StyledTableCell key={j} sx={{ padding: 0 }}>
                       <Button
+                        aria-keyshortcuts={
+                          i * COLUMNS + j < 9
+                            ? String(i * COLUMNS + j + 1)
+                            : undefined
+                        }
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => replaceGugyeol(suggestion)}
                       >
+                        {i * COLUMNS + j < 9 && (
+                          <Typography
+                            component="kbd"
+                            aria-hidden="true"
+                            sx={{
+                              fontSize: "0.7rem",
+                              color: "text.secondary",
+                              mr: 1,
+                            }}
+                          >
+                            {i * COLUMNS + j + 1}
+                          </Typography>
+                        )}
                         <Stack
                           direction="column"
                           justifyContent="center"
