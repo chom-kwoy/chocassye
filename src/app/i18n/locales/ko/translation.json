@@ -17,6 +17,7 @@
   "no-search-term-content-1": "중세 한국어와 근대 한국어, 석독구결을 포함한 텍스트 약 1,000개를 망라한 말뭉치를 검색해보세요.",
   "no-search-term-content-2": "아래 사용방법을 꼭 참고하여 검색어를 입력하시기 바랍니다.",
   "Romanization": "로마자로 보기",
+  "Convert Gugyeol on copy": "복사 시 구결 변환",
   "Search term...": "검색어 입력...",
   "document name...": "문서 제목으로 거르기...",
   "Exclude modern translations": "현대어 번역 제외",

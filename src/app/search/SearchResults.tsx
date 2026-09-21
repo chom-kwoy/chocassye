@@ -47,6 +47,7 @@ function SearchResultsList(props: {
     count: number;
   }[];
   romanize: boolean;
+  convertGugyeolOnCopy: boolean;
   ignoreSep: boolean;
   resultTerm: string;
 }) {
@@ -60,7 +61,7 @@ function SearchResultsList(props: {
           elevation={3}
           style={{ overflow: "visible" }}
         >
-          <CopyableTable>
+          <CopyableTable convertGugyeolOnCopy={props.convertGugyeolOnCopy}>
             <TableBody>
               {/* For each book */}
               {props.filteredResults.map((book, i) => (
@@ -223,6 +224,7 @@ function SearchResultsWrapper(props: SearchResultsProps) {
   const { t } = useTranslation();
 
   const [disabledMatches, setDisabledMatches] = React.useState(new Set());
+  const [convertGugyeolOnCopy, setConvertGugyeolOnCopy] = React.useState(true);
 
   function toggleMatch(i: number) {
     const newDisabledMatches = new Set(disabledMatches);
@@ -346,7 +348,10 @@ function SearchResultsWrapper(props: SearchResultsProps) {
         })}
       </Grid>
 
-      <Grid size="auto" sx={{ display: { xs: "none", sm: "flex" } }}>
+      <Grid
+        size="auto"
+        sx={{ display: { xs: "none", sm: "flex" }, flexWrap: "wrap" }}
+      >
         <FormControlLabel
           control={<Checkbox size="small" sx={{ py: 0 }} />}
           label={
@@ -356,6 +361,16 @@ function SearchResultsWrapper(props: SearchResultsProps) {
           }
           checked={props.romanize}
           onChange={() => props.handleRomanizeChange(!props.romanize)}
+        />
+        <FormControlLabel
+          control={<Checkbox size="small" sx={{ py: 0 }} />}
+          label={
+            <Typography sx={{ fontSize: "1em" }}>
+              {t("Convert Gugyeol on copy")}
+            </Typography>
+          }
+          checked={convertGugyeolOnCopy}
+          onChange={(_, checked) => setConvertGugyeolOnCopy(checked)}
         />
       </Grid>
 
@@ -428,6 +443,7 @@ function SearchResultsWrapper(props: SearchResultsProps) {
       <SearchResultsList
         filteredResults={filteredResultsList}
         romanize={props.romanize}
+        convertGugyeolOnCopy={convertGugyeolOnCopy}
         ignoreSep={props.ignoreSep}
         resultTerm={props.resultTerm}
       />

@@ -39,15 +39,20 @@ export async function postData(url = "", data = {}) {
   return response.json();
 }
 
-export function CopyableTable({ onCopy = undefined, ...props }) {
+export function CopyableTable({
+  onCopy = undefined,
+  convertGugyeolOnCopy = true,
+  ...props
+}) {
   return (
     <Table
       size="small"
       {...props}
       onCopy={(e) => {
-        const text = replaceGugyeolPUAWithHanja(
-          window.getSelection()?.toString() ?? "",
-        );
+        const selection = window.getSelection()?.toString() ?? "";
+        const text = convertGugyeolOnCopy
+          ? replaceGugyeolPUAWithHanja(selection)
+          : selection;
         e.clipboardData.setData("text/plain", text);
         e.clipboardData.setData("text/html", text.replace(/\n/g, "<br>"));
         e.preventDefault();

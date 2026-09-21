@@ -167,6 +167,7 @@ export function BookmarksPage({
   const [bookmarks, setBookmarks] = React.useState<BookmarkEntry[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [romanize, setRomanize] = React.useState(false);
+  const [convertGugyeolOnCopy, setConvertGugyeolOnCopy] = React.useState(true);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [newName, setNewName] = React.useState("");
   const [creating, setCreating] = React.useState(false);
@@ -333,7 +334,13 @@ export function BookmarksPage({
           <Divider />
 
           <Box
-            sx={{ display: "flex", justifyContent: "flex-end", mt: 1, mb: 1 }}
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "flex-end",
+              mt: 1,
+              mb: 1,
+            }}
           >
             <FormControlLabel
               control={<Checkbox size="small" sx={{ py: 0 }} />}
@@ -344,6 +351,16 @@ export function BookmarksPage({
               }
               checked={romanize}
               onChange={() => setRomanize((r) => !r)}
+            />
+            <FormControlLabel
+              control={<Checkbox size="small" sx={{ py: 0 }} />}
+              label={
+                <Typography sx={{ fontSize: "1em" }}>
+                  {t("Convert Gugyeol on copy")}
+                </Typography>
+              }
+              checked={convertGugyeolOnCopy}
+              onChange={(_, checked) => setConvertGugyeolOnCopy(checked)}
             />
           </Box>
 
@@ -364,7 +381,7 @@ export function BookmarksPage({
               elevation={3}
               style={{ overflow: "visible" }}
             >
-              <CopyableTable>
+              <CopyableTable convertGugyeolOnCopy={convertGugyeolOnCopy}>
                 <TableBody>
                   {bookmarks.map((entry) => (
                     <BookmarkRow
