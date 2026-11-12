@@ -69,7 +69,7 @@ export default function DocSelector(props) {
   }
 
   function handleDocChange(ev, value, reason) {
-    if (reason === "input") {
+    if (reason === "input" || reason === "clear") {
       props.handleDocChange(value);
     }
   }
