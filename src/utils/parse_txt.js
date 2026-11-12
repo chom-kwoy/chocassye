@@ -2,7 +2,6 @@
 
 import fs from "fs";
 import { glob } from "glob";
-import path from "path";
 import { promisify } from "util";
 
 import { hangul_to_yale, normalize_string } from "../components/YaleToHangul";
@@ -10,6 +9,7 @@ import { insert_into_db } from "./insert_into_db.ts";
 import {
   parse_year_string,
   year_and_bookname_from_filename,
+  year_and_bookname_from_format_2_filename,
 } from "./parse_utils.js";
 
 function parse_format_1(file, lines) {
@@ -105,14 +105,8 @@ function parse_format_1(file, lines) {
 
 function parse_format_2(file, lines) {
   file = file.normalize("NFKC");
-  let filename = path.parse(file).name;
-
-  let year_string = "미상";
-  let splits = filename.split("_");
-  if (splits.length > 1) {
-    filename = splits.splice(1).join(" ");
-    year_string = splits[0];
-  }
+  const { filename, year_string } =
+    year_and_bookname_from_format_2_filename(file);
 
   let { year, year_start, year_end } = parse_year_string(year_string);
 

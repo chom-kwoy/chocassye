@@ -16,6 +16,15 @@ export function year_and_bookname_from_filename(file) {
   return { filename: filename, year_string: year_string };
 }
 
+export function year_and_bookname_from_format_2_filename(file) {
+  const name = path.parse(file.normalize("NFKC")).name;
+  const splits = name.split("_");
+  return {
+    filename: splits.length > 1 ? splits.slice(1).join(" ") : name,
+    year_string: splits.length > 1 ? splits[0] : "미상",
+  };
+}
+
 export function parse_year_string(year_string) {
   let ys_norm = year_string
     .replace(/\[[^\]]*\]/g, "")
