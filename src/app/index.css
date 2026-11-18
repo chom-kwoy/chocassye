@@ -5,10 +5,8 @@
 }
 
 @font-face {
-  font-family: "Noto Sans CJK KR";
-  src:
-    local("Noto Sans CJK KR"),
-    url(../fonts/NotoSansKR-VariableFont_wght.woff2) format("woff2");
+  font-family: "Noto Sans CJK KR TopBang";
+  src: url(../fonts/NotoSansKR-TopBang-VariableFont_wght.woff2) format("woff2");
 }
 
 @media print {

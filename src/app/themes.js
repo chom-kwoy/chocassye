@@ -5,6 +5,7 @@ import { highlightColors } from "@/components/client_utils";
 
 const fonts = [
   "Gugyeol",
+  "Noto Sans CJK KR TopBang",
   "Source Han Sans KR",
   "Source Han Sans K",
   "Noto Sans CJK KR",

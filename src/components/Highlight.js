@@ -136,22 +136,22 @@ export function toDisplayHTML(sentence, romanize = false) {
   );
 
   // Render tone marks on top of syllable
-  if (!romanize) {
-    [sentence, mapping] = replace_and_map(
-      sentence,
-      HANGUL_SYLLABLE_REGEX,
-      function (_, syllable, tone) {
-        if (tone === "") {
-          return `<span data-tone="L">${syllable}</span>`;
-        } else if (tone === "\u302e") {
-          return `<span data-tone="H">${syllable}<span is-tone>${tone}</span></span>`;
-        } else if (tone === "\u302f") {
-          return `<span data-tone="R">${syllable}<span is-tone>${tone}</span></span>`;
-        }
-      },
-      mapping,
-    );
-  }
+  // if (!romanize) {
+  //   [sentence, mapping] = replace_and_map(
+  //     sentence,
+  //     HANGUL_SYLLABLE_REGEX,
+  //     function (_, syllable, tone) {
+  //       if (tone === "") {
+  //         return `<span data-tone="L">${syllable}</span>`;
+  //       } else if (tone === "\u302e") {
+  //         return `<span data-tone="H">${syllable}<span is-tone>${tone}</span></span>`;
+  //       } else if (tone === "\u302f") {
+  //         return `<span data-tone="R">${syllable}<span is-tone>${tone}</span></span>`;
+  //       }
+  //     },
+  //     mapping,
+  //   );
+  // }
 
   // Add tooltips to gugyeol characters
   [sentence, mapping] = replace_and_map(
